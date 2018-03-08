@@ -11,8 +11,7 @@ public class TestClient {
     //another site to try: http://www.cafeaulait.org/course/week12/22.html
     public static void main(String args[]) throws IOException {
         TestClient testClient = new TestClient();
-        InetAddress address = InetAddress.getByName((new URL("http://www.google.com")).getHost());
-        System.out.println(address);
+        InetAddress address = InetAddress.getByName((new URL("http://www.cafeaulait.org")).getHost());
         Socket socket = new Socket(address, 80);
         // Create the input and output streams for the network socket.
         BufferedReader in
@@ -21,7 +20,8 @@ public class TestClient {
         PrintWriter out
                 = new PrintWriter(socket.getOutputStream(), true);
         // Send request to the HTTP server.
-        out.println("GET /index.html?gfe_rd=cr&amp;dcr=0&amp;ei=ud-gWpaPDo6q8wf0jqPgCQ HTTP/1.1");
+        out.println("GET http://www.cafeaulait.org/course/week12/22.html HTTP/1.1\r\nHost: www.cafeaulait.org");
+        //out.println("Host: www.cafeaulait.org");
         //out.println("Connection: Keep-Alive");
         out.println();   // blank line separating header & body
         out.flush();
@@ -31,7 +31,6 @@ public class TestClient {
         while((line = in.readLine()) != null) {
             System.out.println(line);
         }
-        System.out.println("test");
         // Close the I/O streams.
         in.close();
         out.close();
