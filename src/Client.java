@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.Scanner;
 
 
 /**
@@ -10,7 +11,11 @@ public class Client {
     public static void main(String args[]){
         Client client = new Client("http://example.com", 80);
         client.initConnection();
-        client.executeCommand();
+        try {
+            client.executeCommand();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     //Todo expand when http nits and grits are known
     public Client(String url, int tcpPort) {
@@ -26,12 +31,12 @@ public class Client {
         try {
             socket = new Socket(ipAddress, tcpPort);
             //once we have sockets, init the data streams
-            InputStream inputStream = socket.getInputStream();
+            //InputStream inputStream = socket.getInputStream();
             //we use a buffer for now, we can read the incoming lines from the other side
-            BufferedReader input = new BufferedReader(new InputStreamReader(inputStream));
+            //DataInputStream dataInputStream = new DataInputStream(inputStream);
             //we use an output stream at the moment, may change later on
             DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
-            setInputBuffer(input);
+            //setInputStream(dataInputStream);
             setOutputStream(outputStream);
             setSocket(socket);
         } catch (IOException e) {
@@ -48,22 +53,75 @@ public class Client {
 
     }
 
-    public void executeCommand(){
+    public void executeCommand() throws IOException {
         System.out.println("executing command");
-        String command = "GET /index.html";
+        String command = "GET http://example.com/index.html HTTP/1.1";
         DataOutputStream output = this.getOutputStream();
-        BufferedReader reader = this.getInputBuffer();
-
+        //DataInputStream input = this.getInputStream();
+        byte bytebuffer[] = new  byte[1];
+        String content= null;
         try {
+            InputStream inputStream = this.getSocket().getInputStream();
+            DataInputStream input = new DataInputStream(inputStream);
             output.writeBytes(command);
             System.out.println("command issued");
-            String inputLine = reader.readLine();
+            int len = input.read(bytebuffer);
+
             System.out.println("waiting for response");
-            System.out.println(inputLine);
+            //System.out.println("Response length: " + inputData);
+            System.out.println("response length: " + len);
         } catch (IOException e) {
-            e.printStackTrace();
+            //nothing
         }
+
+//
+//        StringBuilder result = new StringBuilder();
+//        URL url = null;
+//        try {
+//            url = new URL("http://example.com");
+//        } catch (MalformedURLException e) {
+//            e.printStackTrace();
+//        }
+//        HttpURLConnection conn = null;
+//        try {
+//            conn = (HttpURLConnection) url.openConnection();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        conn.setRequestMethod("GET");
+//        BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+//        String line;
+//        while ((line = rd.readLine()) != null) {
+//            result.append(line);
+//        }
+//        rd.close();
+//        System.out.println(result.toString());
+
     }
+    //int inputData = input.read(byteBuffer);
+//            boolean isNull = false;
+//            Scanner scanner = new Scanner(this.getSocket().getInputStream());
+//            scanner.useDelimiter("\\Z");
+//            content = scanner.next();
+//        }catch ( Exception ex ) {
+//            ex.printStackTrace();
+//        }
+//        System.out.println(content);
+//            InputStream inputStream = this.getSocket().getInputStream();
+//            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+//            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+//            int c;
+//            while((c = bufferedReader.read()) != -1){
+//                System.out.print((char) c);
+//            }
+//            while(!isNull){
+//
+//                //character = input.readLine();
+////                if(character == null){
+////                    isNull = true;
+////                }
+//                System.out.println(character);
+//            }
 
     private int getPort() {
         return port;
@@ -89,12 +147,12 @@ public class Client {
         this.outputStream = outputStream;
     }
 
-    private BufferedReader getInputBuffer() {
-        return inputBuffer;
+    private DataInputStream getInputStream() {
+        return inputStream;
     }
 
-    private void setInputBuffer(BufferedReader inputBuffer) {
-        this.inputBuffer = inputBuffer;
+    private void setInputStream(DataInputStream inputStream) {
+        this.inputStream = inputStream;
     }
 
     private InetAddress getAddress() {
@@ -135,7 +193,7 @@ public class Client {
     /**
      * Object that holds the stream that receives data from the server
      */
-    private BufferedReader inputBuffer;
+    private DataInputStream inputStream;
 
 
 }
