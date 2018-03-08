@@ -12,6 +12,7 @@ public class TestClient {
     public static void main(String args[]) throws IOException {
         TestClient testClient = new TestClient();
         InetAddress address = InetAddress.getByName((new URL("http://www.google.com")).getHost());
+        System.out.println(address);
         Socket socket = new Socket(address, 80);
         // Create the input and output streams for the network socket.
         BufferedReader in
@@ -30,6 +31,7 @@ public class TestClient {
         while((line = in.readLine()) != null) {
             System.out.println(line);
         }
+        System.out.println("test");
         // Close the I/O streams.
         in.close();
         out.close();
