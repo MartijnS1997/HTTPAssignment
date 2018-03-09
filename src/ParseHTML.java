@@ -6,10 +6,8 @@ import org.jsoup.select.Elements;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-
+// A class using the JSoup library, to parse the incoming HTML file and retrieve a list of embedded images.
 public class ParseHTML {
-    // A class using the JSoup library, to parse the incoming HTML file and retrieve a list of embedded images.
-
 
 
     // Crawls the html string and returns an "Elements" object containing all elements that are images.
