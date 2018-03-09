@@ -1,13 +1,12 @@
 import java.io.*;
 import java.net.*;
-import java.nio.Buffer;
-import java.util.Scanner;
 
 
 /**
  * Created by Martijn on 7/03/2018.
  * A class of HTTP clients
  */
+//Todo add functionality that if the sever is already connected it maintains the connection for requests
 public class Client {
 
     public static final String ALREADY_CONNECTED = "Already connected, please close current connection and try again";
@@ -20,31 +19,34 @@ public class Client {
 
 
     //Todo reconfigure such that it can be initialized with ClientCommand object
-    private void initConnection(String uriString, int TCPPort){
+    public void initConnection(ClientCommand command){
+
+        URL url = command.getUrl();
+        int TCPPort = command.getPort();
 
         if(isAlreadyConnected()){
-            throw new IllegalStateException(ALREADY_CONNECTED);
+            throw new ClientException(ALREADY_CONNECTED);
         }
 
-        InetAddress ipAddress = getIPAddress(uriString);
+        //after connection set the current url
+        this.setCurrentUrl(url);
+
+        InetAddress ipAddress = getIPAddress(url);
         //now create the socket and the other connection parts
         try {
             Socket socket = new Socket(ipAddress, TCPPort);
             PrintWriter printWriter = new PrintWriter(socket.getOutputStream());
-            InputStreamReader inputStreamReader = new InputStreamReader(socket.getInputStream());
-            BufferedReader readBuffer = new BufferedReader( inputStreamReader);
+            DataInputStream inputStream = new DataInputStream(socket.getInputStream());
 
             //now set them all
             setConnectionSocket(socket);
             setPrintWriter(printWriter);
-            setReader(readBuffer);
+            setInputStream(inputStream);
         } catch (IOException e) {
             //something went wrong, notify the command line
             e.printStackTrace();
         }
-
         //the connection is now successfully initialized
-
     }
 
     /**
@@ -54,24 +56,40 @@ public class Client {
     private boolean isAlreadyConnected(){
         Socket connectionSocket = this.getConnectionSocket();
         if(connectionSocket == null){
-            return true;
+            return false;
         }
         //if the socket is closed it means it is no longer needed and we can hook up an new connection
         return connectionSocket.isClosed();
     }
 
     /**
+     * Checks if the current active url has the same host as the requested url
+     * @param otherUrl the other url to check
+     * @return true if and only if both url's have the same host
+     */
+    public boolean hasSameHost(URL otherUrl){
+        URL currentUrl = this.getCurrentUrl();
+        //check if the url is already initialized
+        if(currentUrl == null){
+            //if so the host is never the same
+            return false;
+        }
+        //if not check the hosts of the url's
+        return (currentUrl.getHost()).equals(otherUrl.getHost());
+    }
+
+    /**
      * Closes the current connection by closing the streams and socket
      */
-    private void closeConnection(){
+    public void closeConnection(){
         Socket socket = this.getConnectionSocket();
         PrintWriter writer = this.getPrintWriter();
-        BufferedReader reader = this.getReader();
+        DataInputStream inputStream = this.getInputStream();
 
         try {
             socket.close();
             writer.close();
-            reader.close();
+            inputStream.close();
         } catch (IOException e) {
             // the connection could not be closed for unknown reasons, later report back to the command client
             e.printStackTrace();
@@ -81,17 +99,16 @@ public class Client {
 
     /**
      * converts the given uri string into the corresponding IP address
-     * @param uriString the string containing the url of the requested page
+     * @param url the url object of the requested page
      * @return and InetAddress object containing the IP address of the host
      */
-    private InetAddress getIPAddress(String uriString){
+    private InetAddress getIPAddress(URL url){
         InetAddress address = null;
         try {
-            URL url = new URL(uriString);
             address = InetAddress.getByName(url.getHost());
-        } catch (UnknownHostException | MalformedURLException e) {
+        } catch (UnknownHostException e) {
             //if we are readying the command line send some feedback
-            e.printStackTrace();
+            throw new ClientException("The the requested host is unknown, please try again\nhost: " + url.getHost());
         }
         return address;
     }
@@ -100,10 +117,10 @@ public class Client {
      * Issues the request and waits for a response
      * @param request the http request object containing the request
      */
-    public void issueRequest(HttpRequest request){
-        BufferedReader reader = this.getReader();
+    public String issueRequest(HttpRequest request){
+        DataInputStream inputStream = this.getInputStream();
         PrintWriter printWriter = this.getPrintWriter();
-        request.execute(printWriter, reader);
+        return request.execute(printWriter, inputStream);
     }
 
 
@@ -115,12 +132,12 @@ public class Client {
         this.printWriter = printWriter;
     }
 
-    private BufferedReader getReader() {
-        return reader;
+    private DataInputStream getInputStream() {
+        return inputStream;
     }
 
-    private void setReader(BufferedReader reader) {
-        this.reader = reader;
+    private void setInputStream(DataInputStream inputStream) {
+        this.inputStream = inputStream;
     }
 
     public Socket getConnectionSocket() {
@@ -131,10 +148,33 @@ public class Client {
         this.connectionSocket = connectionSocket;
     }
 
+    private URL getCurrentUrl() {
+        return currentUrl;
+    }
+
+    private void setCurrentUrl(URL currentUrl) {
+        this.currentUrl = currentUrl;
+    }
+
+    /**
+     * The print writer used in communication with the web page
+     */
     private PrintWriter printWriter;
-    private BufferedReader reader;
+
+    /**
+     * The buffered inputStream used to read from the input stream
+     */
+    private DataInputStream inputStream;
+
+    /**
+     * Socket to connect the client to the server
+     */
     private Socket connectionSocket;
 
+    /**
+     * the url of the current connection
+     */
+    private URL currentUrl;
 }
 
 //    public static void main(String args[]){

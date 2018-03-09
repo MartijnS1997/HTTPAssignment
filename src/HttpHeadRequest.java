@@ -1,6 +1,5 @@
-import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.PrintWriter;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -14,7 +13,7 @@ public class HttpHeadRequest extends HttpRequest {
     }
 
     @Override
-    public void execute(PrintWriter outputWriter, BufferedReader inputReader) {
-
+    public String execute(PrintWriter outputWriter, DataInputStream inputReader) {
+        return "";
     }
 }

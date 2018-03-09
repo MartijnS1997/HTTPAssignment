@@ -13,11 +13,11 @@ public class ClientCommandParser {
         //empty constructor
     }
 
-    public ClientCommand parseCommand(String commandString){
+    public static ClientCommand parseCommand(String commandString){
         String[] commandParts = commandString.split(" "); //split the string space
         //check if the command was properly formatted (three parts)
         if(commandParts.length != NB_OF_COMMAND_PARTS){
-            throw new IllegalArgumentException(INVALID_FORMAT);
+            throw new ClientException(INVALID_FORMAT);
         }
         HttpRequestCommand httpRequestCommand = convertToCommand(commandParts[0]);
         //if it is properly formatted return a command object
@@ -44,7 +44,7 @@ public class ClientCommandParser {
         };
     }
 
-    protected URL convertToUrl(String urlString){
+    protected static URL convertToUrl(String urlString){
         URL url = null;
         try {
             url = new URL(urlString);
@@ -65,28 +65,13 @@ public class ClientCommandParser {
         return url;
     }
 
-//    /**
-//     * Checks if the command is a post or a put command
-//     * @param httpCommand the command to be checked
-//     * @return true if and only if the string is "PUT" or "POST"
-//     */
-//    private boolean isPostOrPut(String httpCommand){
-//        switch(httpCommand){
-//            case PUT:
-//                return true;
-//            case POST:
-//                return true;
-//            default:
-//                return false;
-//        }
-//    }
 
     /**
      * Checks if the given string contains a valid http command
      * @param httpCommand the string to be checked
      * @return only returns true if the string is equal to "GET", "POST", "PUT" or "HEAD"
      */
-    private boolean isValidHttpCommand(String httpCommand){
+    private static boolean isValidHttpCommand(String httpCommand){
         switch(httpCommand){
             case GET:
                 return true;
@@ -106,9 +91,9 @@ public class ClientCommandParser {
      * @param httpCommand the command to be converted
      * @return a HttpCommand enum object representing the http command
      */
-    private HttpRequestCommand convertToCommand(String httpCommand){
+    private static HttpRequestCommand convertToCommand(String httpCommand){
         if(!isValidHttpCommand(httpCommand)){
-            throw new IllegalArgumentException(INVALID_HTTP_COMMAND);
+            throw new ClientException(INVALID_HTTP_COMMAND);
         }
         switch(httpCommand){
             case GET:

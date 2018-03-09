@@ -2,6 +2,7 @@ import java.net.URL;
 
 /**
  * Created by Martijn on 8/03/2018.
+ * A class that creates new http requests from the given commands
  */
 public class RequestFactory {
     public RequestFactory(){
@@ -16,7 +17,7 @@ public class RequestFactory {
      * @param messageBody message used for post and put requests, may be ignored if get or head request
      * @return a http request object ready to execute
      */
-    public HttpRequest createRequest(ClientCommand clientCommand, String messageBody){
+    public static HttpRequest createRequest(ClientCommand clientCommand, String messageBody){
         //first we need to check if there needs to be added a message body
         //extract the type from the command
         HttpRequestCommand httpCommand = clientCommand.getCommandType();
