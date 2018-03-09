@@ -1,10 +1,8 @@
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import sun.jvm.hotspot.utilities.BitMap;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URL;
@@ -23,7 +21,7 @@ public class TestClient_Kobe {
     //another site to try: http://www.cafeaulait.org/course/week12/22.html
     public static void main(String args[]) throws IOException {
         TestClient_Kobe testClient = new TestClient_Kobe();
-        InetAddress address = InetAddress.getByName((new URL("http://ableshare.net")).getHost());
+        InetAddress address = InetAddress.getByName((new URL("https://www.symbolica.be")).getHost());
         System.out.println(address);
         Socket socket = new Socket(address, 80);
 
@@ -33,13 +31,15 @@ public class TestClient_Kobe {
                 new InputStreamReader(socket.getInputStream()));
         PrintWriter outStream
                 = new PrintWriter(socket.getOutputStream(), true);
+
+
 //        String line;
 //        while((line = in.readLine()) != null) {
 //           System.out.println(line);
 //        }
         // Send request to the HTTP server.
         outStream.println("GET / HTTP/1.1");
-        outStream.println("Host: ableshare.net" );
+        outStream.println("Host: www.symbolica.be" );
 //        outStream.println("HOST: " + address);
 //        System.out.println(inStream.readLine());
         //out.println("Connection: Keep-Alive");
@@ -65,7 +65,13 @@ public class TestClient_Kobe {
 
         System.out.println(imagelist);
 
+        System.out.println(imagelist.get(0));
 
+
+        outStream.println("GET /" +imagelist.get(0) + " HTTP/1.1");
+        outStream.println("Host: www.symbolica.be" );
+        outStream.println();   // blank line separating header & body
+        outStream.flush();
 
 
 

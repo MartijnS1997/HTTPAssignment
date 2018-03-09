@@ -18,7 +18,7 @@ public class imageRetrieverTest {
 
     @Test
     public void testImageRetriever() throws IOException {
-        InetAddress address = InetAddress.getByName((new URL("https://www.symbolica.be")).getHost());
+        InetAddress address = InetAddress.getByName((new URL("http://ableshare.net")).getHost());
         Socket socket = new Socket(address, 80);
 
         // Create the input and output streams for the network socket.
@@ -28,7 +28,7 @@ public class imageRetrieverTest {
                 = new PrintWriter(socket.getOutputStream(), true);
 
         outStream.println("GET / HTTP/1.1");
-        outStream.println("Host: www.symbolica.be" );
+        outStream.println("Host: ableshare.net" );
         outStream.println();   // blank line separating header & body
         outStream.flush();
 
@@ -50,7 +50,8 @@ public class imageRetrieverTest {
         ArrayList imagelist = ParseHTML.getImageLinkList(images);
 
 
-        ImageRetriever.retrieveImages(imagelist, inputStream, outStream, "www.symbolica.be");
+
+        ImageRetriever.retrieveImages(imagelist, inputStream, outStream, "ableshare.net");
 
         inputStream.close();
         outStream.close();

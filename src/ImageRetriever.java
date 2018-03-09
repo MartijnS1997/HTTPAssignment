@@ -1,13 +1,11 @@
+import org.apache.commons.io.FileUtils;
+
 import java.io.*;
 import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import java.util.*;
 
 
 // A class that takes the imagelist from a html file, and retrieve each of the embedded images in this list.
@@ -28,12 +26,14 @@ public class ImageRetriever {
             currentOutStream.println();
             currentOutStream.flush();
 
+
+
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             byte[] byteChunk = new byte[4096];
             try {
                 int nb_bytes;
-                while( (nb_bytes = currentInStream.read(byteChunk)) >0 ){
+                while( (nb_bytes = currentInStream.read(byteChunk)) > 0  ){
                     baos.write(byteChunk, 0, nb_bytes);
                 }
             } catch (IOException e) {
@@ -45,32 +45,41 @@ public class ImageRetriever {
 
             String workingDir = System.getProperty("user.dir");
 
-
-            FileOutputStream stream = null;
+//            String test = new String(image,0);
+//            System.out.println("image: " + test);
 
             try {
-                File f = new File(workingDir +"/imageCache/"+imageURI);
-                f.getParentFile().mkdirs();
-                f.createNewFile();
-                stream = new FileOutputStream(workingDir +"/imageCache/"+imageURI);
-
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                FileUtils.writeByteArrayToFile(new File(workingDir +"/imageCache/"+imageURI),image);
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            try {
-                stream.write(image);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    stream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+
+//            FileOutputStream stream = null;
+//
+//            try {
+//                File f = new File(workingDir +"/imageCache/"+imageURI);
+//                f.getParentFile().mkdirs();
+//                f.createNewFile();
+//                stream = new FileOutputStream(workingDir +"/imageCache/"+imageURI);
+//
+//            } catch (FileNotFoundException e) {
+//                e.printStackTrace();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//
+//            try {
+//                stream.write(image);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            } finally {
+//                try {
+//                    stream.close();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
         }
 
 
