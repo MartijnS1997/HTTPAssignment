@@ -3,13 +3,13 @@ import java.net.URL;
 /**
  * Created by Martijn on 8/03/2018.
  */
-public interface Command {
+public interface ClientCommand {
 
     /**
      * Gets the command type of the command
      * @return the command type
      */
-    HttpCommands getCommandType();
+    HttpRequestCommand getCommandType();
 
     //Todo change type to URL and name to getUrl once ready
     /**

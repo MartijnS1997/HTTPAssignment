@@ -17,7 +17,9 @@ public class Client {
     public Client(){
         //nothing to construct so far
     }
-    
+
+
+    //Todo reconfigure such that it can be initialized with ClientCommand object
     private void initConnection(String uriString, int TCPPort){
 
         if(isAlreadyConnected()){

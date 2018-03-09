@@ -10,9 +10,8 @@ import java.net.URL;
  */
 public abstract class HttpRequest  {
 
-    public HttpRequest(String urlString) throws MalformedURLException {
+    public HttpRequest(URL url){
         //get the url needed for the request
-        URL url = new URL(urlString);
         this.setUrl(url);
     }
 

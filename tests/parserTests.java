@@ -8,11 +8,11 @@ import java.net.URL;
  */
 public class parserTests {
 
-    CommandParser parser;
+    ClientCommandParser parser;
 
     @Before
     public void setupMutableFixture() {
-        parser = new CommandParser();
+        parser = new ClientCommandParser();
     }
 
     @Test
@@ -23,10 +23,10 @@ public class parserTests {
 
     @Test
     public void testParser(){
-        Command command = parser.parseCommand("PUT www.google.be 80");
-        assert(command.getCommandType().equals(HttpCommands.PUT));
-        assert(command.getUrl().toString().equals("http://www.google.be"));
-        assert(command.getPort()==80);
-        assert(command.needsMessageBody());
+        ClientCommand clientCommand = parser.parseCommand("PUT www.google.be 80");
+        assert(clientCommand.getCommandType().equals(HttpRequestCommand.PUT));
+        assert(clientCommand.getUrl().toString().equals("http://www.google.be"));
+        assert(clientCommand.getPort()==80);
+        assert(clientCommand.needsMessageBody());
     }
 }

@@ -1,31 +1,30 @@
-import com.sun.javaws.exceptions.InvalidArgumentException;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
  * Created by Martijn on 8/03/2018.
- * A class that parses the command into a Command object
+ * A class that parses the command into a ClientCommand object
  */
 //Todo add functionality that checks if there is a protocol in the url, if not it will add it
-public class CommandParser {
+public class ClientCommandParser {
 
 
-    public CommandParser(){
+    public ClientCommandParser(){
         //empty constructor
     }
 
-    public Command parseCommand(String commandString){
+    public ClientCommand parseCommand(String commandString){
         String[] commandParts = commandString.split(" "); //split the string space
         //check if the command was properly formatted (three parts)
         if(commandParts.length != NB_OF_COMMAND_PARTS){
             throw new IllegalArgumentException(INVALID_FORMAT);
         }
+        HttpRequestCommand httpRequestCommand = convertToCommand(commandParts[0]);
         //if it is properly formatted return a command object
-        return new Command() {
+        return new ClientCommand() {
             @Override
-            public HttpCommands getCommandType() {
-                return convertToCommand(commandParts[0]);
+            public HttpRequestCommand getCommandType() {
+                return httpRequestCommand;
             }
 
             @Override
@@ -40,7 +39,7 @@ public class CommandParser {
 
             @Override
             public boolean needsMessageBody() {
-                return isPostOrPut(commandParts[0]);
+                return HttpRequestCommand.isInteractiveCommand(httpRequestCommand);
             }
         };
     }
@@ -66,21 +65,21 @@ public class CommandParser {
         return url;
     }
 
-    /**
-     * Checks if the command is a post or a put command
-     * @param httpCommand the command to be checked
-     * @return true if and only if the string is "PUT" or "POST"
-     */
-    private boolean isPostOrPut(String httpCommand){
-        switch(httpCommand){
-            case PUT:
-                return true;
-            case POST:
-                return true;
-            default:
-                return false;
-        }
-    }
+//    /**
+//     * Checks if the command is a post or a put command
+//     * @param httpCommand the command to be checked
+//     * @return true if and only if the string is "PUT" or "POST"
+//     */
+//    private boolean isPostOrPut(String httpCommand){
+//        switch(httpCommand){
+//            case PUT:
+//                return true;
+//            case POST:
+//                return true;
+//            default:
+//                return false;
+//        }
+//    }
 
     /**
      * Checks if the given string contains a valid http command
@@ -107,19 +106,19 @@ public class CommandParser {
      * @param httpCommand the command to be converted
      * @return a HttpCommand enum object representing the http command
      */
-    private HttpCommands convertToCommand(String httpCommand){
+    private HttpRequestCommand convertToCommand(String httpCommand){
         if(!isValidHttpCommand(httpCommand)){
             throw new IllegalArgumentException(INVALID_HTTP_COMMAND);
         }
         switch(httpCommand){
             case GET:
-                return HttpCommands.GET;
+                return HttpRequestCommand.GET;
             case POST:
-                return HttpCommands.POST;
+                return HttpRequestCommand.POST;
             case PUT:
-                return HttpCommands.PUT;
+                return HttpRequestCommand.PUT;
             case HEAD:
-                return HttpCommands.HEAD;
+                return HttpRequestCommand.HEAD;
         }
 
         return null;
