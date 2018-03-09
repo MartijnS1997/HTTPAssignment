@@ -17,7 +17,8 @@ public class ClientCommandLine {
     public ClientCommandLine(PrintStream consoleOutput, InputStream consoleInput){
         this.client = new Client();
         this.printStream = consoleOutput;
-        this.readStream = consoleInput;
+        //this.readStream = consoleInput;
+        this.reader = new BufferedReader(new InputStreamReader(consoleInput));
     }
 
     /**
@@ -38,14 +39,15 @@ public class ClientCommandLine {
            //ask if we need a new one
            activeSession = anotherCommand();
         }
+        terminate();
     }
 
     /**
      * Queries if the user want to submit another request to the client
-     * @return
+     * @return true if the user responds with "y" and false if with "n"
      */
     private boolean anotherCommand(){
-        BufferedReader reader = new BufferedReader( new InputStreamReader(this.getReadStream()));
+        BufferedReader reader = this.getReader();/*new BufferedReader( new InputStreamReader(this.getReadStream()));*/
         PrintStream printer = this.getPrintStream();
 
         //send the query to the user:
@@ -70,9 +72,20 @@ public class ClientCommandLine {
         return false;
     }
 
+    /**
+     * Termination sequence for the command client
+     */
+    private void terminate(){
+        PrintStream printer = this.getPrintStream();
+        printer.println(GOODBYE);
+
+        Client client = this.getClient();
+        client.closeConnection();
+    }
+
     private String getCommand(){
         //first create a scanner that reads input from the command line client
-        BufferedReader reader = new BufferedReader( new InputStreamReader(System.in));
+        BufferedReader reader = this.getReader(); /*new BufferedReader( new InputStreamReader(System.in));*/
         PrintStream printer = this.getPrintStream();
         //send message to the user
         printer.println(ENTER_COMMAND);
@@ -149,7 +162,7 @@ public class ClientCommandLine {
      */
     private String getMessageBody(){
         //first create a scanner that reads input from the command line client
-        BufferedReader reader = new BufferedReader( new InputStreamReader(this.getReadStream()));
+        BufferedReader reader = this.getReader();/*new BufferedReader( new InputStreamReader(this.getReadStream()));*/
         PrintStream printer = this.getPrintStream();
         //send a friendly message to the user
         printer.println(ENTER_MESSAGE_BODY);
@@ -181,13 +194,6 @@ public class ClientCommandLine {
         }
         //now build the string
         String messageBody = builder.toString();
-        try {
-            reader.close();
-        } catch (IOException e) {
-            //close the buffered reader?
-            //does it also close the stream?
-            e.printStackTrace();
-        }
 
         return messageBody;
     }
@@ -208,17 +214,26 @@ public class ClientCommandLine {
         return printStream;
     }
 
+//    /**
+//     * Getter for the input reader
+//     * @return the input reader used in the command line session
+//     */
+//    public InputStream getReadStream() {
+//        return readStream;
+//    }
+
     /**
-     * Getter for the input reader
-     * @return the input reader used in the command line session
+     * Getter for the reader of the input from the command line client
+     * @return
      */
-    public InputStream getReadStream() {
-        return readStream;
+    public BufferedReader getReader() {
+        return reader;
     }
 
     private Client client;
     private PrintStream printStream;
     private InputStream readStream;
+    private BufferedReader reader;
 
     /*
     Messages
@@ -229,6 +244,7 @@ public class ClientCommandLine {
     private final static String CONTINUE_SESSION = "Do you want to submit another request? [y/n]";
     private final static String RETRY_Y_N = "Invalid input please try again";
     private final static String ENTER_COMMAND = "Please enter your next http request";
+    private final static String GOODBYE = "closing down client";
 
     /*
     Constants

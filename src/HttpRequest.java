@@ -1,4 +1,5 @@
 import java.io.DataInputStream;
+import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.net.URL;
 
@@ -20,6 +21,40 @@ public abstract class HttpRequest  {
      * @param inputReader reader for the input, we read incoming messages from this reader
      */
     public abstract String execute(PrintWriter outputWriter, DataInputStream inputReader);
+
+    /**
+     * Saves the file locally to the specified location
+     * @param htmlString the string containing the html code
+     * @param filename the file name
+     */
+    public void saveHtmlPage(String htmlString, String filename){
+        try {
+            PrintWriter out = new PrintWriter(filename + ".html");
+            out.print(htmlString);
+            out.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Sends the request header to the server additional data like message body needs to be sent
+     * by sendRequestMessageBody
+     * @param requestHeader the request Header
+     * @param outputWriter the writer to write the data with to the server
+     */
+    protected void sendRequestHeader(String[] requestHeader, PrintWriter outputWriter){
+        //write all the messages line for line to the server
+        for(String requestString: requestHeader){
+            //System.out.println(requestString);
+            outputWriter.println(requestString);
+        }
+        //then add empty line to finish the request
+        outputWriter.println();
+        outputWriter.flush();
+
+        //we are finished
+    }
 
     /**
      * Getter for the current URL

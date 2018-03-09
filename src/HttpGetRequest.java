@@ -21,7 +21,7 @@ public class HttpGetRequest extends HttpRequest {
         String requestMessage[] = buildGetRequest(host, path);
 
         //send the newly created message
-        sendMessage(requestMessage, outputWriter);
+        sendRequestHeader(requestMessage, outputWriter);
 
         //read the input from the stream
         return receiveResponse(inputStream);
@@ -33,34 +33,69 @@ public class HttpGetRequest extends HttpRequest {
      * @return a string containing the response from the server
      */
     private String receiveResponse(DataInputStream inputStream){
-        StringBuilder builder = new StringBuilder(RESPONSE_SIZE);
+        //initialize the strings
+
+        String responseHeader = null;
+        String responseBody = null;
         //get the input stream reader
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         String line = null;
         //read from the stream while concatenating
         try {
-            //if the line is null, terminate
-            while((line = reader.readLine()) != null) {
-                builder.append(line);
-                builder.append("\n");
-            }
+            responseHeader = getResponseHeader(reader);
+            responseBody = getResponseMessageBody(reader);
         } catch (IOException e) {
+            //idk what happened better print the error
             e.printStackTrace();
         }
 
-        return builder.toString();
+        this.saveHtmlPage(responseBody, "GetResult");
+
+        return responseHeader + "\n" + responseBody;
     }
 
-    private void sendMessage(String[] requestMessage, PrintWriter outputWriter){
-        for(String requestString: requestMessage){
-            System.out.println(requestString);
-            outputWriter.println(requestString);
-        }
-        //then add empty line to finish the request
-        outputWriter.println();
-        outputWriter.flush();
+    private String getResponseMessageBody(BufferedReader reader) throws IOException {
+        //initialize the builder
+        StringBuilder responseBodyBuilder = new StringBuilder(RESPONSE_SIZE);
+        //and the line to be read
+        String line;
+        //if we got the html tail, close the reader
+        boolean gotHtmlTail = false;
 
-        //we are finished
+        while(!gotHtmlTail) {
+            line = reader.readLine();
+            //append the line
+            responseBodyBuilder.append(line);
+            //also add newline feed
+            responseBodyBuilder.append("\n");
+            //check if we have received the html closing
+            if((line.toLowerCase()).contains("</html>")||(line == null)){
+                gotHtmlTail = true;
+            }
+        }
+
+        return responseBodyBuilder.toString();
+    }
+
+    /**
+     * Reads the response header from the reader and returns a string containing the response
+     * @param reader the reader to read the input from
+     * @return the string containing the message header from the response
+     * @throws IOException thrown if io went wrong
+     */
+    private String getResponseHeader(BufferedReader reader) throws IOException {
+        //initiate the string builder
+        StringBuilder responseHeaderBuilder = new StringBuilder();
+        String line;
+        //while we do not read a blank line we are building the header
+        while(!(line = reader.readLine()).equals("")){
+            //add the line
+            responseHeaderBuilder.append(line);
+            //also add the newline feed
+            responseHeaderBuilder.append("\n");
+        }
+
+        return responseHeaderBuilder.toString();
     }
 
     /**
@@ -70,6 +105,9 @@ public class HttpGetRequest extends HttpRequest {
      * @return an array of string where each string is a single line in the command
      */
     private static String[] buildGetRequest(String host, String path){
+        if(path.equals("")){
+            path = "/";
+        }
         //generate he string array
         String request[] = new String[NB_LINES_IN_COMMAND];
         //generate the first line

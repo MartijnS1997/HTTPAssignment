@@ -28,9 +28,30 @@ public class TestClient {
         // Read the response and display on console.
         String line;
         // readLine() returns null if server close the network socket.
-        while((line = in.readLine()) != null) {
+        StringBuilder builder = new StringBuilder();
+        int lineCounter = 0;
+        boolean firstWhitePassed = false;
+        boolean gotFinalHeader = false;
+        while(!gotFinalHeader) {
+
+            line = in.readLine();
             System.out.println(line);
+            if (line.equals("") && !firstWhitePassed) {
+                firstWhitePassed = true;
+                System.out.println("Actual response: \n");
+            }
+            if(firstWhitePassed){
+            builder.append(line);
+            lineCounter ++;
+            }
+            if(line.contains("</html>")){
+                System.out.println("Line with HTML: " + line);
+                gotFinalHeader = true;
+            }
         }
+
+        String response = builder.toString();
+        System.out.println("Response length: " + (response.length() + lineCounter));
         // Close the I/O streams.
         in.close();
         out.close();
