@@ -29,4 +29,14 @@ public class parserTests {
         assert(clientCommand.getPort()==80);
         assert(clientCommand.needsMessageBody());
     }
+
+    @Test
+    public void testMethod(){
+        System.out.println(HttpRequestMethod.GET.toString());
+        System.out.println(HttpRequestMethod.PUT.toString());
+        System.out.println(HttpRequestMethod.POST.toString());
+        System.out.println(HttpRequestMethod.HEAD.toString());
+
+
+    }
 }

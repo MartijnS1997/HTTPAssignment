@@ -5,13 +5,16 @@ import java.net.URL;
  * Created by Martijn on 8/03/2018.
  * A class that parses the command into a ClientCommand object
  */
-//Todo add functionality that checks if there is a protocol in the url, if not it will add it
+//Todo add functionality that checks if there is a protocol in the url, if not it will add it & add comments
 public class ClientCommandParser {
+
+
 
 
     public ClientCommandParser(){
         //empty constructor
     }
+
 
     public static ClientCommand parseCommand(String commandString){
         String[] commandParts = commandString.split(" "); //split the string space
@@ -44,6 +47,11 @@ public class ClientCommandParser {
         };
     }
 
+    /**
+     * Converts the provided url string into an URL object
+     * @param urlString the string to be converted
+     * @return the url object matching the provided string
+     */
     protected static URL convertToUrl(String urlString){
         URL url = null;
         try {
@@ -59,7 +67,7 @@ public class ClientCommandParser {
             }else{
                 //we've tried to add the protocol and we still get a problem, report the error
                 //an other unexpected problem
-                e.printStackTrace();
+                throw new ClientException(MALFORMED_URL);
             }
         }
         return url;
@@ -131,4 +139,5 @@ public class ClientCommandParser {
 
     private static final String INVALID_HTTP_COMMAND = "invalid or unsupported http command, please try GET, POST, PUT or HEAD";
 
+    private static final String MALFORMED_URL = "The Url was not well formed please try again";
 }

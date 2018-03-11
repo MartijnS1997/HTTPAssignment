@@ -114,10 +114,12 @@ public class HttpGetRequest extends HttpRequest {
         request[0] = GET + " " + path + " " + HTTP_VERSION;
         //also add the host
         request[1] = HOST + host;
+        //request to keep the connection alive
+        request[2] = KEEP_CONNECTION_ALIVE;
 
         return request;
     }
 
-    private final static int NB_LINES_IN_COMMAND = 2;
+    private final static int NB_LINES_IN_COMMAND = 3;
     private final static int RESPONSE_SIZE = 1000;
 }

@@ -2,6 +2,11 @@ import java.net.URL;
 
 /**
  * Created by Martijn on 8/03/2018.
+ * an interface of client commands
+ * after parsing the parser should generate a ClientCommand object to communicate the current command to the client
+ * should contain a command type (enum) specifying the type of command that was issued (used in request construction)
+ * also should contain the url & port that needs to be used by the client
+ * the interface also signifies if additional information is needed (a message body) for completion of the command
  */
 public interface ClientCommand {
 
@@ -28,16 +33,5 @@ public interface ClientCommand {
      * @return true if and only if the command type is post or put
      */
     boolean needsMessageBody();
-
-
-
-
-//TODO may be added, maybe better way to add the extra input
-//    /**
-//     * The body of the message, contains the extra information for a post or put command
-//     * @return the body of the message
-//     */
-//    String getMessageBody();
-//
 
 }

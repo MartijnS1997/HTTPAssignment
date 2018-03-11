@@ -3,14 +3,15 @@ import java.net.*;
 
 /**
  * Created by Martijn on 7/03/2018.
+ * A testclient only used for basic stuff
  */
 public class TestClient {
-    public TestClient(){
+    private TestClient(){
 
     }
     //another site to try: http://www.cafeaulait.org/course/week12/22.html
     public static void main(String args[]) throws IOException {
-        TestClient testClient = new TestClient();
+        //TestClient testClient = new TestClient();
         InetAddress address = InetAddress.getByName((new URL("http://www.cafeaulait.org")).getHost());
         Socket socket = new Socket(address, 80);
         // Create the input and output streams for the network socket.

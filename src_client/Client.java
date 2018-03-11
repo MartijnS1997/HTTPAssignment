@@ -59,7 +59,7 @@ public class Client {
             return false;
         }
         //if the socket is closed it means it is no longer needed and we can hook up an new connection
-        return connectionSocket.isClosed();
+        return !connectionSocket.isClosed();
     }
 
     /**
@@ -86,6 +86,7 @@ public class Client {
         PrintWriter writer = this.getPrintWriter();
         DataInputStream inputStream = this.getInputStream();
 
+        //System.out.println("Closing down connection");
         try {
             socket.close();
             writer.close();
@@ -124,34 +125,67 @@ public class Client {
     }
 
 
+    /**
+     * Getter for the writer used for communication with the server (is able to print line for line)
+     * @return the printer used in communication
+     */
     private PrintWriter getPrintWriter() {
         return printWriter;
     }
 
+    /**
+     * Setter for the printer used for server communication
+     * @param printWriter the print writer to be used by the client
+     */
     private void setPrintWriter(PrintWriter printWriter) {
         this.printWriter = printWriter;
     }
 
+    /**
+     * Getter for the data input stream used for server communication, receives the data for the client
+     * @return an input stream
+     */
     private DataInputStream getInputStream() {
         return inputStream;
     }
 
+    /**
+     * Setter for the input stream
+     * @param inputStream the input stream to be used by the client
+     */
     private void setInputStream(DataInputStream inputStream) {
         this.inputStream = inputStream;
     }
 
-    public Socket getConnectionSocket() {
+    /**
+     * The socket that connects the client to the server
+     * @return the socket that connects the client to the server
+     */
+    private Socket getConnectionSocket() {
         return connectionSocket;
     }
 
-    public void setConnectionSocket(Socket connectionSocket) {
+    /**
+     * Setter for the connection socket
+     * @param connectionSocket the socket responsible for the connection with the server
+     */
+    private void setConnectionSocket(Socket connectionSocket) {
         this.connectionSocket = connectionSocket;
     }
 
+    /**
+     * Getter for the currently used url, this url contains the path to the currently requested resource
+     * as well as the host for the communication
+     * @return the currently used url
+     */
     private URL getCurrentUrl() {
         return currentUrl;
     }
 
+    /**
+     * Setter for the currently used url
+     * @param currentUrl the url to be used in further communication with the server
+     */
     private void setCurrentUrl(URL currentUrl) {
         this.currentUrl = currentUrl;
     }
@@ -177,146 +211,5 @@ public class Client {
     private URL currentUrl;
 }
 
-//    public static void main(String args[]){
-//        Client client = new Client("http://example.com", 80);
-//        client.initConnection();
-//        try {
-//            client.executeCommand();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
-//    //Todo expand when http nits and grits are known
-//    public Client(String url, int tcpPort) {
-//        setAddress(url);
-//        setPort(tcpPort);
-//    }
-//
-//    public void initConnection(){
-//        InetAddress ipAddress = this.getAddress();
-//        int tcpPort = this.getPort();
-//        Socket socket = null;
-//        //create the connection:
-//        try {
-//            socket = new Socket(ipAddress, tcpPort);
-//            //once we have sockets, init the data streams
-//            //InputStream inputStream = socket.getInputStream();
-//            //we use a buffer for now, we can read the incoming lines from the other side
-//            //DataInputStream dataInputStream = new DataInputStream(inputStream);
-//            //we use an output stream at the moment, may change later on
-//            DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
-//            //setInputStream(dataInputStream);
-//            setOutputStream(outputStream);
-//            setSocket(socket);
-//        } catch (IOException e) {
-//            //I have no idea what happened
-//            e.printStackTrace();
-//        }
-//
-//        System.out.println("connection established");
-//
-//    }
-//
-//
-//    private void getCommand(){
-//
-//    }
-//
-//    public void executeCommand() throws IOException {
-//        System.out.println("executing command");
-//        String command = "GET http://example.com/index.html HTTP/1.1";
-//        DataOutputStream output = this.getOutputStream();
-//        //DataInputStream input = this.getInputStream();
-//        byte bytebuffer[] = new  byte[1];
-//        String content= null;
-//        try {
-//            InputStream inputStream = this.getSocket().getInputStream();
-//            DataInputStream input = new DataInputStream(inputStream);
-//            output.writeBytes(command);
-//            System.out.println("command issued");
-//            int len = input.read(bytebuffer);
-//
-//            System.out.println("waiting for response");
-//            //System.out.println("Response length: " + inputData);
-//            System.out.println("response length: " + len);
-//        } catch (IOException e) {
-//            //nothing
-//        }
-//
-//
-//    }
-//
-//
-//    private int getPort() {
-//        return port;
-//    }
-//
-//    private void setPort(int port) {
-//        this.port = port;
-//    }
-//
-//    private Socket getSocket() {
-//        return socket;
-//    }
-//
-//    private void setSocket(Socket socket) {
-//        this.socket = socket;
-//    }
-//
-//    private DataOutputStream getOutputStream() {
-//        return outputStream;
-//    }
-//
-//    private void setOutputStream(DataOutputStream outputStream) {
-//        this.outputStream = outputStream;
-//    }
-//
-//    private DataInputStream getInputStream() {
-//        return inputStream;
-//    }
-//
-//    private void setInputStream(DataInputStream inputStream) {
-//        this.inputStream = inputStream;
-//    }
-//
-//    private InetAddress getAddress() {
-//        return address;
-//    }
-//
-//    private void setAddress(String urlString) {
-//        InetAddress address = null;
-//        try {
-//            address = InetAddress.getByName((new URL(urlString)).getHost());
-//        } catch (UnknownHostException | MalformedURLException e) {
-//            //just leave it open for now, change if we get issues
-//            e.printStackTrace();
-//        }
-//        this.address = address;
-//    }
-//
-//    /**
-//     * Variable that stores the ip adress of the website we want to visit
-//     */
-//    InetAddress address;
-//
-//    /**
-//     * The variable that stores the TCP port used for communication with the server
-//     */
-//    private int port = 80;
-//
-//    /**
-//     * The socket used in the connection with the server
-//     */
-//    private Socket socket;
-//
-//    /**
-//     * Object that holds the stream that sends data to the server
-//     */
-//    private DataOutputStream outputStream;
-//
-//    /**
-//     * Object that holds the stream that receives data from the server
-//     */
-//    private DataInputStream inputStream;
 
 

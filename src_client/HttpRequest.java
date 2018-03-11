@@ -79,6 +79,7 @@ public abstract class HttpRequest  {
      */
     protected final static String HTTP_VERSION = "HTTP/1.1";
     protected final static String HOST = "Host: ";
+    protected final static String KEEP_CONNECTION_ALIVE = "Connection: Keep-Alive";
     protected final static String GET = "GET";
     protected final static String HEAD = "HEAD";
     protected final static String PUT = "PUT";
