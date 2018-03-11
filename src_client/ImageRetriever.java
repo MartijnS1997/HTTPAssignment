@@ -4,6 +4,7 @@ import java.io.*;
 import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.Socket;
 import java.net.URL;
 import java.util.*;
 
@@ -12,7 +13,11 @@ import java.util.*;
 public class ImageRetriever {
 
     //Retrieve all images embedded in the html.
-    public static void retrieveImages(List<String> imagelist, DataInputStream currentInStream, PrintWriter currentOutStream, String currentHost){
+    public static void retrieveImages(List<String> imagelist, String currentHost) throws IOException {
+
+
+
+
 
         List<String> internalImages = getInternalLinkList(imagelist);
         List<String> externalImages = getExternalLinkList(imagelist);
@@ -21,67 +26,80 @@ public class ImageRetriever {
 
 
         for (String imageURI: internalImages){
-            currentOutStream.println("GET " +imageURI +"HTTP/1.1");
-            currentOutStream.println("Host: " + currentHost);
-            currentOutStream.println();
-            currentOutStream.flush();
+            Socket socket = new Socket(currentHost, 80);
+
+            PrintWriter outStream
+                    = new PrintWriter(socket.getOutputStream());
+
+            outStream.println("GET /" +imageURI +" HTTP/1.1");
+            outStream.println("Host: " + currentHost);
+            outStream.println();
+            outStream.flush();
 
 
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-            byte[] byteChunk = new byte[4096];
-            try {
-                int nb_bytes;
-                while( (nb_bytes = currentInStream.read(byteChunk)) > 0  ){
-                    baos.write(byteChunk, 0, nb_bytes);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            byte[] image = baos.toByteArray();
-
-
+            java.io.DataInputStream inputStream
+                    = new java.io.DataInputStream(socket.getInputStream());
             String workingDir = System.getProperty("user.dir");
-
-//            String test = new String(image,0);
-//            System.out.println("image: " + test);
-
-            try {
-                FileUtils.writeByteArrayToFile(new File(workingDir +"/imageCache/"+imageURI),image);
-            } catch (IOException e) {
-                e.printStackTrace();
+            File file = new File(workingDir +"/imageCache/"+imageURI);
+            file.getParentFile().mkdirs();
+            file.createNewFile();
+            DataOutputStream dos = new DataOutputStream(new FileOutputStream(file));
+            int size;
+            byte[] buffer = new byte[8192];
+            while ((size = inputStream.read(buffer)) > 0){
+                dos.write(buffer, 0, size);
+                dos.flush();
             }
+            dos.close();
+
+            inputStream.close();
+            outStream.close();
+            socket.close();
 
 
-//            FileOutputStream stream = null;
-//
-//            try {
-//                File f = new File(workingDir +"/imageCache/"+imageURI);
-//                f.getParentFile().mkdirs();
-//                f.createNewFile();
-//                stream = new FileOutputStream(workingDir +"/imageCache/"+imageURI);
-//
-//            } catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//
-//            try {
-//                stream.write(image);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            } finally {
-//                try {
-//                    stream.close();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
         }
 
+        for (String imageURI: externalImages){
+            String externalHost = (new URL(imageURI)).getHost();
+            System.out.println(externalHost);
+            Socket socket = new Socket(externalHost, 80);
+
+            PrintWriter outStream
+                    = new PrintWriter(socket.getOutputStream());
+
+            outStream.println("GET /" +imageURI +" HTTP/1.1");
+            outStream.println("Host: " + externalHost);
+            outStream.println();
+            outStream.flush();
+
+
+
+
+            java.io.DataInputStream inputStream
+                    = new java.io.DataInputStream(socket.getInputStream());
+            String workingDir = System.getProperty("user.dir");
+            File file = new File(workingDir +"/imageCache/"+imageURI);
+            file.getParentFile().mkdirs();
+            file.createNewFile();
+            DataOutputStream dos = new DataOutputStream(new FileOutputStream(file));
+            int size;
+            byte[] buffer = new byte[8192];
+            while ((size = inputStream.read(buffer)) > 0){
+                System.out.println(size);
+                dos.write(buffer, 0, size);
+                dos.flush();
+            }
+            dos.close();
+
+            System.out.println("image transfer done");
+            inputStream.close();
+            outStream.close();
+            socket.close();
+
+
+        }
 
 
     }
