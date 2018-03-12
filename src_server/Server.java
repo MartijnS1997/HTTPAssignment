@@ -5,6 +5,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+//Todo add support for timestamps in the virtual file system
 /**
  * Created by Martijn on 10/03/2018.
  * A class of http server objects
@@ -36,6 +37,8 @@ public class Server {
             //couldn't initialize, let it fly
             e.printStackTrace();
         }
+        //initialize the file server system
+        initFileServer();
     }
 
     /**
@@ -54,7 +57,7 @@ public class Server {
                 //listen for connections
                 Socket connectionSocket = serverSocket.accept();
                 //if a new connection is requested create a new server connection object
-                ServerConnection connection = new ServerConnection(connectionSocket);
+                ServerConnection connection = new ServerConnection(connectionSocket, this);
                 //submit the new connection to the thread pool
                 threadPool.submit(connection);
             } catch (IOException e) {
@@ -83,6 +86,14 @@ public class Server {
     }
 
     /**
+     * Initializes the file server by transferring all the pages into the virtual file system
+     */
+    private void initFileServer(){
+        ServerFileSystemInitializer.initServerFiles(this.getFileSystem());
+    }
+
+
+    /**
      * Getter for the server socket, used to listen for connections
      * @return the server socket used for listening for external connections
      */
@@ -99,6 +110,15 @@ public class Server {
     }
 
     /**
+     * Getter for the server file system, the server filesystem is a virtual file system
+     * that is only in memory when in execution (contents are lost when we shut down the server)
+     * @return the serer file system used by the server
+     */
+    public ServerFileSystem getFileSystem() {
+        return fileSystem;
+    }
+
+    /**
      * The socket that maintains the connection to the server
      */
     private ServerSocket serverSocket;
@@ -107,6 +127,11 @@ public class Server {
      * The thread pool used for connection creation
      */
     private ExecutorService threadPool;
+
+    /**
+     * The fileSystem used by the server
+     */
+    private ServerFileSystem fileSystem = new ServerFileSystem();
 
     /**
      * Getter for the TCP port used for communication with the server

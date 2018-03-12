@@ -14,7 +14,7 @@ public class ServerConnection implements Runnable {
      * Constructor for a server connection object
      * @param socket the connection socket to communicate with the client
      */
-    public ServerConnection(Socket socket){
+    public ServerConnection(Socket socket, Server server){
         this.connectionSocket = socket;
     }
 
@@ -25,6 +25,11 @@ public class ServerConnection implements Runnable {
         //2. parse it
         //3. respond using the newly created request
         //4. goto 1.
+
+        initConnection();
+        readRequest();
+
+
 
     }
 
@@ -46,13 +51,43 @@ public class ServerConnection implements Runnable {
         }
     }
 
+    /**
+     * Reads the request line and generates the appropriate response object
+     * that can later be executed by the connection
+     * @return a HttpRequestResponse object to execute
+     */
     private HttpRequestResponse readRequest(){
         //steps of the request
         //1. read the request line
         //2. read the body (host necesarry)
         //3. (optional) retrieve the extra body check this by using the parsed input
+        String requestLineString = readRequestLine();
+        HttpRequestLine requestLine = HttpRequestParser.parseRequestLine(requestLineString);
+        String[] requestHeaderString = readRequestHeader();
+        HttpRequestHeader requestHeader = HttpRequestParser.parseRequestHeader(requestHeaderString);
+        //check if the message has a header
+        if(!requestHeader.hasHostHeader()){
+            writeErrorMessage(HttpStatusCode.BAD_REQUEST);
+        }
+        //check if we need to listen for a message body
+        String[] messageBody = new String[0];
+        if(HttpRequestMethod.hasMessageBody(requestLine.getMethod())){
+            messageBody = readMessageBody();
+        }
+        //get the file system used by the server
+        ServerFileSystem fileSystem = this.getServer().getFileSystem();
+        //after all the data is read start building the response
+        HttpRequestResponse response = RequestResponseFactory.createResponse(requestLine, requestHeader, messageBody, fileSystem);
 
-        return null;
+        return response;
+    }
+
+    /**
+     * Writes the provided status code to the client
+     * @param statusCode th status code that needs to be written
+     */
+    private void writeErrorMessage(HttpStatusCode statusCode){
+        //todo implement the error message
     }
 
     /**
@@ -92,7 +127,16 @@ public class ServerConnection implements Runnable {
         }
 
         //return the received lines
-        return (String[]) headerLines.toArray();
+        return headerLines.toArray(new String[0]);
+    }
+
+    /**
+     * Reads the input stream for the message body
+     * @return an array of strings where each entry equals one line from the request
+     */
+    private String[] readMessageBody(){
+        //todo implement probably needs different implementation for post and put (put needs to be an html page and end with null or </html>
+        return null;
     }
 
     /**
@@ -118,6 +162,19 @@ public class ServerConnection implements Runnable {
     private BufferedReader getReader() {
         return reader;
     }
+
+    /**
+     * Getter for the server the connection works with
+     * @return
+     */
+    private Server getServer() {
+        return server;
+    }
+
+    /**
+     * The server that the connection works for, needed to access the file system
+     */
+    private Server server;
 
     /**
      * The socket responsible for this connection
