@@ -158,7 +158,12 @@ public class ClientCommandLine {
         //then file it to the client
         Client client = this.getClient();
         //get the response from the server
-        String Response = client.issueRequest(httpRequest);
+        String Response = null;
+        try {
+            Response = client.issueRequest(httpRequest);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         //print the response
         PrintStream printStream = this.getPrintStream();
         printStream.println(Response);

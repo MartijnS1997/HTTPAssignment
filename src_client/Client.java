@@ -118,7 +118,7 @@ public class Client {
      * Issues the request and waits for a response
      * @param request the http request object containing the request
      */
-    public String issueRequest(HttpRequest request){
+    public String issueRequest(HttpRequest request) throws IOException {
         DataInputStream inputStream = this.getInputStream();
         PrintWriter printWriter = this.getPrintWriter();
         return request.execute(printWriter, inputStream);

@@ -1,5 +1,6 @@
 import java.io.DataInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 
@@ -20,7 +21,7 @@ public abstract class HttpRequest  {
      * @param outputWriter the writer so write output to the server (eg our request)
      * @param inputReader reader for the input, we read incoming messages from this reader
      */
-    public abstract String execute(PrintWriter outputWriter, DataInputStream inputReader);
+    public abstract String execute(PrintWriter outputWriter, DataInputStream inputReader) throws IOException;
 
     /**
      * Saves the file locally to the specified location
