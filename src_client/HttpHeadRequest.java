@@ -1,6 +1,6 @@
-import java.io.DataInputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.URL;
+
 
 /**
  * Created by Martijn on 8/03/2018.
@@ -13,7 +13,7 @@ public class HttpHeadRequest extends HttpRequest {
     }
 
     @Override
-    public String execute(PrintWriter outputWriter, DataInputStream inputReader) {
+    public String execute(PrintWriter outputWriter, DataInputStream inputReader) throws IOException {
         URL url = this.getUrl();
         String host = url.getHost();
         String path = url.getPath();
@@ -23,12 +23,17 @@ public class HttpHeadRequest extends HttpRequest {
         sendRequestHeader(requestMessage, outputWriter);
 
         //read the input from the stream
-        return receiveResponse(inputStream);
+        try {
+            return receiveResponse(inputReader);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return receiveResponse(inputReader);
 
     }
 
 
-    private String receiveResponse(DataInputStream inputStream){
+    private String receiveResponse(DataInputStream inputStream) throws IOException {
         //initialize the strings
 
         String response = null;
@@ -36,9 +41,9 @@ public class HttpHeadRequest extends HttpRequest {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         String line = null;
         //initialize the builder
-        StringBuilder responseBodyBuilder = new StringBuilder(reader);
+        StringBuilder responseBodyBuilder = new StringBuilder();
 
-        while((line = reader.readLine)!=null) {
+        while((line = reader.readLine())!=null) {
             //append the line
             responseBodyBuilder.append(line);
             //also add newline feed
@@ -49,7 +54,7 @@ public class HttpHeadRequest extends HttpRequest {
         response = responseBodyBuilder.toString();
         this.saveHtmlPage(response, "HeadResult");
 
-        return ;
+        return response ;
     }
 
 
@@ -58,7 +63,7 @@ public class HttpHeadRequest extends HttpRequest {
             path = "/";
         }
         //generate he string array
-        String request[] = new String[NB_LINES_IN_COMMAND];
+        String request[] = new String[3];
         //generate the first line
         request[0] = GET + " " + path + " " + HTTP_VERSION;
         //also add the host
