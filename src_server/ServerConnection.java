@@ -106,11 +106,23 @@ public class ServerConnection implements Runnable {
      * Reads the request line from an http request
      */
     private String readRequestLine(){
+
         BufferedReader reader = this.getReader();
         //we only need to read one line and parse it
         String requestHeader = null;
+
         try {
-            requestHeader = reader.readLine();
+            //read the input until not null
+            boolean inputStarted = false;
+            while(!inputStarted){
+                requestHeader = reader.readLine();
+                if(requestHeader == null || reader.equals("")){
+                    //do nothing
+                }else{
+                    inputStarted = true;
+                }
+            }
+//            requestHeader = reader.readLine();
         } catch (IOException e) {
             //got an issue doing IO no idea what went wrong
             System.out.println("nullpointer reader");

@@ -1,3 +1,4 @@
+import java.io.PrintWriter;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -45,6 +46,20 @@ public class ResponseHeader {
         headerLines.addAll(this.getExtras());
 
         return headerLines;
+    }
+
+    /**
+     * Writes the header to the specified printer
+     * also adds the clear line to indicate the end of the header
+     * @param writer the printer to write with (writes to the client)
+     */
+    public void writeResponseHeader(PrintWriter writer){
+        List<String> headerLines = this.getHeaderLines();
+        for(String headerLine: headerLines){
+            writer.println(headerLine);
+        }
+        //print the final newline to indicate the start of the response
+        writer.println();
     }
 
 

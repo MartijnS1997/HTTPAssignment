@@ -21,10 +21,10 @@ public class HttpGetRequestResponse extends HttpTransferRequestResponse {
 
     @Override
     public void sendResponse(PrintWriter writer) {
-        System.out.println("Start sending get response");
+//        System.out.println("Start sending get response");
         //first check if the message contains the if modified since
         if(isModifiedSince()){
-            System.out.println("send modified since response");
+//            System.out.println("send modified since response");
             sendModifiedResponse(writer);
         }else{
             sendNotModifiedResponse(writer);
@@ -38,13 +38,20 @@ public class HttpGetRequestResponse extends HttpTransferRequestResponse {
      * @param writer the writer used to send the message
      */
     private void sendNotModifiedResponse(PrintWriter writer){
-        //checks if this doesn't work
-        List<String> responseList = super.createResponseHeader(HttpStatusCode.NOT_MODIFIED);
-        int responseSize = responseList.size();
-        String responseLines[] = responseList.toArray(new String[responseSize]);
-        writeToClient(writer, responseLines);
-        //print empty line
-        writer.println();
+
+        //create header
+        ResponseHeader header = new ResponseHeader(HttpStatusCode.NOT_MODIFIED);
+
+        //also give the last modified date
+        ServerFileSystem fileSystem = this.getFileSystem();
+        Path fileLocOnServer = this.getServerPath();
+
+        header.setModifiedSince(fileSystem.getLastModifiedDate(fileLocOnServer));
+
+        //write the header to the client
+        header.writeResponseHeader(writer);
+
+
         writer.flush();
     }
 
@@ -59,14 +66,18 @@ public class HttpGetRequestResponse extends HttpTransferRequestResponse {
             ReadOnlyServerFile messageBodyFile = new ReadOnlyServerFile(fileSystem, fileLocOnServer);
             setMessageBodyFile(messageBodyFile);
             //we can only create the response header after the content is known
-            List<String> headerList = this.createResponseHeader(HttpStatusCode.OK);
-            int headerSize = headerList.size();
-            String headerArray[] = headerList.toArray(new String[headerSize]);
+            //create the header
+            ResponseHeader header = new ResponseHeader(HttpStatusCode.OK);
+            header.setContentLength(messageBodyFile.getFileSize());
+            header.setContentType(CONTENT_TEXT_HTML_TYPE);
+
             //now send the response
-            this.writeToClient(writer, headerArray);
-            //blank line in between
-            writer.println();
+            //write the header (takes care of the blank line)
+            header.writeResponseHeader(writer);
+
+            //send the file to the client
             messageBodyFile.writeFile(writer);
+            //flush the line
             writer.flush();
 
         } catch (ServerFileSystemException | ServerException e) {
@@ -86,20 +97,6 @@ public class HttpGetRequestResponse extends HttpTransferRequestResponse {
         Path serverPath = this.getServerPath();
         String[] fileLines = fileSystem.readTextBasedFileLines(serverPath);
         return fileLines;
-    }
-
-    @Override
-    protected List<String> createResponseHeader(HttpStatusCode statusCode){
-        List<String> standardHeader = super.createResponseHeader(statusCode);
-        //add the content length
-        ReadOnlyServerFile messageFile = this.getMessageBodyFile();
-        long contentLength = messageFile.getFileSize();
-
-        standardHeader.add(CONTENT_LENGTH_STRING + Long.toString(contentLength));
-        //add the content type
-        standardHeader.add(CONTENT_TYPE_STRING + CONTENT_TEXT_HTML_TYPE);
-
-        return standardHeader;
     }
 
     /**

@@ -1,8 +1,6 @@
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.LongStream;
 
@@ -51,13 +49,11 @@ public abstract class HttpTransferRequestResponse extends HttpRequestResponse {
      * @param writer the writer used for writing the message
      */
     protected void sendError404Message(PrintWriter writer) {
-        //todo send error message the file doesn't exist
-        System.out.println("sending 404 message");
+
         //create the standard header, ready to be expanded
         List<String> error404Header = super.createResponseHeader(HttpStatusCode.NOT_FOUND);
 
-//        String error404Page[] = getErrorPageBody();
-        Path fileLocationOnServer = ERRROR_404_PAGE_PATH;
+        Path fileLocationOnServer = ERROR_404_PAGE_PATH;
         ServerFileSystem fileSystem = this.getFileSystem();
         ReadOnlyServerFile error404File;
 
@@ -69,27 +65,19 @@ public abstract class HttpTransferRequestResponse extends HttpRequestResponse {
             throw new ServerException(HttpStatusCode.SERVER_ERROR);
         }
 
+        //create the header for the error message
+        ResponseHeader header = new ResponseHeader(HttpStatusCode.NOT_FOUND);
+        header.setContentLength(error404File.getFileSize());
+        header.setContentType(CONTENT_TEXT_HTML_TYPE + CONTENT_CHARSET_ISO);
+        header.setConnection(CONNECTION_CLOSE);
 
-        long contentSize = error404File.getFileSize();
-        error404Header.add(CONTENT_LENGTH_STRING + contentSize);
-        error404Header.add(CONTENT_TYPE_STRING + CONTENT_TEXT_HTML_TYPE + CONTENT_CHARSET_ISO);
-        error404Header.add(CONNECTION_CLOSE);
-
-        String error404HeaderArray[] = error404Header.toArray(new String[error404Header.size()]);
-
-        //send the response
-        this.writeToClient(writer,error404HeaderArray);
-
-        //write empty line
-        writer.println();
+        //write the header, it also takes care of the empty line
+        header.writeResponseHeader(writer);
         //send the page
         error404File.writeFile(writer);
-//        for(String line: error404Page){
-//            System.out.println(line);
-//        }
-//        writer.println();
+        //flush the line to be sure
         writer.flush();
     }
 
-    private final static Path ERRROR_404_PAGE_PATH = Paths.get("/messagePages/Error404.html");
+    private final static Path ERROR_404_PAGE_PATH = Paths.get("/messagePages/Error404.html");
 }

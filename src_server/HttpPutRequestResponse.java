@@ -17,10 +17,8 @@ public class HttpPutRequestResponse extends HttpRequestResponse {
     @Override
     public void sendResponse(PrintWriter writer) {
         writeFile();
-        List<String> putResponseHeader = this.createResponseHeader(HttpStatusCode.OK);
-        int putResponseSize = putResponseHeader.size();
-        String[] putResponse = putResponseHeader.toArray(new String[putResponseSize]);
-        writeToClient(writer, putResponse);
+        ResponseHeader header = new ResponseHeader(HttpStatusCode.OK);
+        header.writeResponseHeader(writer);
     }
 
     private void writeFile(){
@@ -30,12 +28,6 @@ public class HttpPutRequestResponse extends HttpRequestResponse {
 
         fileSystem.writeTextBasedFile(serverPath, messageBody);
     }
-
-    @Override
-    protected List<String> createResponseHeader(HttpStatusCode statusCode) {
-        return super.createResponseHeader(statusCode);
-    }
-
     /**
      * Getter for the message string of the put request
      * the message contains the file to modify

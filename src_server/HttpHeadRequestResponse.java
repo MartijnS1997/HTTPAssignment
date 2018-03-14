@@ -1,3 +1,4 @@
+import javax.xml.ws.Response;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.List;
@@ -21,32 +22,21 @@ public class HttpHeadRequestResponse extends HttpTransferRequestResponse{
     public void sendResponse(PrintWriter writer) {
         //first try to create the header the normal way
         try{
-            List<String> header = createResponseHeader(HttpStatusCode.OK);
-            int headerSize = header.size();
-            String headerArray[] = header.toArray(new String[headerSize]);
-            writeToClient(writer, headerArray);
+            //get the file from the server
+            ServerFileSystem fileSystem = this.getFileSystem();
+            Path fileLocOnServer = this.getServerPath();
+            ResponseHeader header = new ResponseHeader(HttpStatusCode.OK);
+            //set the content length
+            header.setContentLength(fileSystem.getFileSize(fileLocOnServer));
+            //set the content type
+            header.setContentType(CONTENT_TEXT_HTML_TYPE);
+            //set the last modified date
+            header.setModifiedSince(fileSystem.getLastModifiedDate(fileLocOnServer));
+            //send the header
+            header.writeResponseHeader(writer);
 
-        }catch(ServerException e){
+        }catch(ServerFileSystemException e){
             sendError404Message( writer);
         }
-    }
-
-    @Override
-    protected List<String> createResponseHeader(HttpStatusCode statusCode) {
-        List<String> baseResponse = super.createResponseHeader(statusCode);
-        //set the content size
-        try {
-            ServerFileSystem fileSystem = this.getFileSystem();
-            Path serverPath = this.getServerPath();
-            long fileSize = fileSystem.getFileSize(serverPath);
-            baseResponse.add(CONTENT_LENGTH_STRING + fileSize);
-            //the content type
-            baseResponse.add(CONTENT_TYPE_STRING + CONTENT_TEXT_HTML_TYPE);
-        } catch (ServerFileSystemException e) {
-            throw new ServerException(HttpStatusCode.NOT_FOUND);
-        }
-
-
-        return baseResponse;
     }
 }
