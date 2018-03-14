@@ -1,2 +1,3 @@
 Example.html /Example.html
 JamesMarshall.html /extraPages/JamesMarshall.html
+Error404.html /messagePages/Error404.html

@@ -1,7 +1,6 @@
 import java.io.*;
 import java.nio.file.Path;
 import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -11,7 +10,7 @@ import java.util.List;
 public class HttpGetRequestResponse extends HttpTransferRequestResponse {
     /**
      * Constructor for a http get response
-     * @param serverPath the requested filepath
+     * @param serverPath the requested file path
      * @param header the header, needed to retrieve info about the if-modified-since
      */
     public HttpGetRequestResponse(Path serverPath, ServerFileSystem fileSystem, HttpRequestHeader header) {
@@ -55,8 +54,10 @@ public class HttpGetRequestResponse extends HttpTransferRequestResponse {
      */
     private void sendModifiedResponse(PrintWriter writer){
         try {
-            String[] messageBody = getFileStringLines();
-            setMessageBodyContent(messageBody);
+            ServerFileSystem fileSystem = this.getFileSystem();
+            Path fileLocOnServer = this.getServerPath();
+            ReadOnlyServerFile messageBodyFile = new ReadOnlyServerFile(fileSystem, fileLocOnServer);
+            setMessageBodyFile(messageBodyFile);
             //we can only create the response header after the content is known
             List<String> headerList = this.createResponseHeader(HttpStatusCode.OK);
             int headerSize = headerList.size();
@@ -65,12 +66,11 @@ public class HttpGetRequestResponse extends HttpTransferRequestResponse {
             this.writeToClient(writer, headerArray);
             //blank line in between
             writer.println();
-            this.writeToClient(writer, messageBody);
+            messageBodyFile.writeFile(writer);
             writer.flush();
 
         } catch (ServerFileSystemException | ServerException e) {
             sendError404Message(writer);
-
 
         }
     }
@@ -92,20 +92,9 @@ public class HttpGetRequestResponse extends HttpTransferRequestResponse {
     protected List<String> createResponseHeader(HttpStatusCode statusCode){
         List<String> standardHeader = super.createResponseHeader(statusCode);
         //add the content length
-        //first get the current file system
-        ServerFileSystem fileSystem = this.getFileSystem();
-        //get the location of the file
-        Path filePath = this.getServerPath();
-        //get the size
+        ReadOnlyServerFile messageFile = this.getMessageBodyFile();
+        long contentLength = messageFile.getFileSize();
 
-        long contentLength = 0;
-        try {
-            contentLength = fileSystem.getFileSize(filePath);
-            //java is a bit autistic an doesn't want us to add it to the signature
-        } catch (ServerFileSystemException e) {
-            //so we throw an unchecked exception
-            throw new ServerException(HttpStatusCode.NOT_FOUND);
-        }
         standardHeader.add(CONTENT_LENGTH_STRING + Long.toString(contentLength));
         //add the content type
         standardHeader.add(CONTENT_TYPE_STRING + CONTENT_TEXT_HTML_TYPE);
@@ -146,19 +135,19 @@ public class HttpGetRequestResponse extends HttpTransferRequestResponse {
      * back to the client if requested
      * @return the lines of the content to be sent back
      */
-    public String[] getMessageBodyContent() {
-        return messageBodyContent;
+    public ReadOnlyServerFile getMessageBodyFile() {
+        return messageBodyFile;
     }
 
     /**
      * Setter for the message body of a request (see getter for info)
-     * @param messageBodyContent the content to set
+     * @param messageBodyFile the content to set
      */
-    public void setMessageBodyContent(String[] messageBodyContent) {
-        if(!canHaveAsMessageBody(messageBodyContent)){
+    public void setMessageBodyFile(ReadOnlyServerFile messageBodyFile) {
+        if(!canHaveAsMessageBody(messageBodyFile)){
             throw new ServerException(HttpStatusCode.SERVER_ERROR);
         }
-        this.messageBodyContent = messageBodyContent;
+        this.messageBodyFile = messageBodyFile;
     }
 
     /**
@@ -166,8 +155,8 @@ public class HttpGetRequestResponse extends HttpTransferRequestResponse {
      * @param messageBodyContent the content to be checked
      * @return true if the content is not a null pointer and the current content is a null reference (uninitialized)
      */
-    private boolean canHaveAsMessageBody(String[] messageBodyContent){
-        return messageBodyContent != null && this.getMessageBodyContent() == null;
+    private boolean canHaveAsMessageBody(ReadOnlyServerFile messageBodyContent){
+        return messageBodyContent != null && this.getMessageBodyFile() == null;
     }
 
     /**
@@ -178,5 +167,5 @@ public class HttpGetRequestResponse extends HttpTransferRequestResponse {
     /**
      * The message body content, the content to be sent back to the client
      */
-    private String[] messageBodyContent;
+    private ReadOnlyServerFile messageBodyFile;
 }

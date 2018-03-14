@@ -6,6 +6,7 @@ import java.util.List;
  * Created by Martijn on 11/03/2018.
  * a class of head request responses, handles the head request responses for the server
  */
+//todo add the modified since header
 public class HttpHeadRequestResponse extends HttpTransferRequestResponse{
 
     /**

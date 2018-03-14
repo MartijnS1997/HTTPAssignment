@@ -45,16 +45,6 @@ public abstract class HttpTransferRequestResponse extends HttpRequestResponse {
         return nbChars + (nbLines-1); // the chars, the nb of line feeds
     }
 
-    /**
-     * Retrieves the error page body, used for sending error 404 messages
-     * @return the html file converted to strings ready to send to the client
-     */
-    private static String[] getErrorPageBody(){
-        String errorPagePathString ="resources/Error404.html";
-        Path errorPagePath = Paths.get(errorPagePathString);
-        String errorPageBody[] = ServerConnection.readFileAtRelPath(errorPagePath);
-        return errorPageBody;
-    }
 
     /**
      * Method for sending the 404 error message to the client
@@ -63,15 +53,24 @@ public abstract class HttpTransferRequestResponse extends HttpRequestResponse {
     protected void sendError404Message(PrintWriter writer) {
         //todo send error message the file doesn't exist
         System.out.println("sending 404 message");
+        //create the standard header, ready to be expanded
         List<String> error404Header = super.createResponseHeader(HttpStatusCode.NOT_FOUND);
 
-        //only keep the first two lines, the others are blank
-        String error404Page[] = getErrorPageBody();
-//        for(String string: error404Page){
-//            System.out.println(string);
-//        }
+//        String error404Page[] = getErrorPageBody();
+        Path fileLocationOnServer = ERRROR_404_PAGE_PATH;
+        ServerFileSystem fileSystem = this.getFileSystem();
+        ReadOnlyServerFile error404File;
 
-        long contentSize = getContentSize(error404Page);
+        try {
+            //reads the file into memory, its contents wont change during its lifetime
+            error404File = new ReadOnlyServerFile(fileSystem, fileLocationOnServer);
+        } catch (ServerFileSystemException e) {
+            //will actually never happen, otherwise throw server error
+            throw new ServerException(HttpStatusCode.SERVER_ERROR);
+        }
+
+
+        long contentSize = error404File.getFileSize();
         error404Header.add(CONTENT_LENGTH_STRING + contentSize);
         error404Header.add(CONTENT_TYPE_STRING + CONTENT_TEXT_HTML_TYPE + CONTENT_CHARSET_ISO);
         error404Header.add(CONNECTION_CLOSE);
@@ -80,18 +79,17 @@ public abstract class HttpTransferRequestResponse extends HttpRequestResponse {
 
         //send the response
         this.writeToClient(writer,error404HeaderArray);
-//        for(String line: error404HeaderArray){
-//            System.out.println(line);
-//        }
-//        System.out.println();
+
         //write empty line
         writer.println();
         //send the page
-        this.writeToClient(writer, error404Page);
-        for(String line: error404Page){
-            System.out.println(line);
-        }
-        writer.println();
+        error404File.writeFile(writer);
+//        for(String line: error404Page){
+//            System.out.println(line);
+//        }
+//        writer.println();
         writer.flush();
     }
+
+    private final static Path ERRROR_404_PAGE_PATH = Paths.get("/messagePages/Error404.html");
 }
