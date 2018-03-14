@@ -1,7 +1,17 @@
 import org.junit.Before;
 import org.junit.Test;
 
+import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
+import java.util.stream.LongStream;
+
+import static junit.framework.TestCase.assertEquals;
 
 /**
  * Created by Martijn on 8/03/2018.
@@ -38,5 +48,40 @@ public class parserTests {
         System.out.println(HttpRequestMethod.HEAD.toString());
 
 
+    }
+
+    @Test
+    public void localHostTest() throws MalformedURLException, UnknownHostException {
+        URL url = new URL("http://localhost");
+        System.out.println(url);
+        InetAddress address = InetAddress.getByName(url.getHost());
+        System.out.println(address);
+
+    }
+
+    @Test
+    public void serverTimeHTTP(){
+
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat dateFormat = new SimpleDateFormat(
+                "EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        System.out.println(dateFormat.format(calendar.getTime()));
+
+    }
+
+    @Test
+    public void testCharCounter(){
+        String content[] = new String[]{"hey", "bob", "and", "ann"};
+        int nbLines = content.length;
+        Long nbChars = 0L;
+        try{
+            nbChars = LongStream.range(0, nbLines).map(l -> (content[Math.toIntExact(l)]).length()).sum();
+        } catch(ArithmeticException e){
+            throw new ServerException(HttpStatusCode.SERVER_ERROR);
+
+        }
+
+        assert(nbChars == 12L);
     }
 }

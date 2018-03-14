@@ -21,7 +21,7 @@ public class TestClient {
         PrintWriter out
                 = new PrintWriter(socket.getOutputStream(), true);
         // Send request to the HTTP server.
-        out.println("GET http://www.cafeaulait.org/course/week12/22.html HTTP/1.1\r\nHost: www.cafeaulait.org");
+        out.println("GET /course/week12/22.html HTTP/1.1\r\nHost: www.cafeaulait.org");
         //out.println("Host: www.cafeaulait.org");
         //out.println("Connection: Keep-Alive");
         out.println();   // blank line separating header & body
@@ -45,8 +45,9 @@ public class TestClient {
             builder.append(line);
             lineCounter ++;
             }
-            if(line.contains("</html>")){
+            if(line==null||line.toLowerCase().contains("</html>")){
                 System.out.println("Line with HTML: " + line);
+                lineCounter ++;
                 gotFinalHeader = true;
             }
         }

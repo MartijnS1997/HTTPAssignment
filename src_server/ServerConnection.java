@@ -1,6 +1,10 @@
+import javax.sound.sampled.Line;
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -16,6 +20,7 @@ public class ServerConnection implements Runnable {
      */
     public ServerConnection(Socket socket, Server server){
         this.connectionSocket = socket;
+        this.server = server;
     }
 
     @Override
@@ -25,11 +30,16 @@ public class ServerConnection implements Runnable {
         //2. parse it
         //3. respond using the newly created request
         //4. goto 1.
-
         initConnection();
-        readRequest();
 
-
+        while(true) {
+            try {
+                HttpRequestResponse response = readRequest();
+                response.sendResponse(this.getPrintWriter());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 
@@ -62,8 +72,10 @@ public class ServerConnection implements Runnable {
         //2. read the body (host necesarry)
         //3. (optional) retrieve the extra body check this by using the parsed input
         String requestLineString = readRequestLine();
+        System.out.println("The request: " + requestLineString);
         HttpRequestLine requestLine = HttpRequestParser.parseRequestLine(requestLineString);
         String[] requestHeaderString = readRequestHeader();
+        System.out.println("Header: " + Arrays.toString(requestHeaderString));
         HttpRequestHeader requestHeader = HttpRequestParser.parseRequestHeader(requestHeaderString);
         //check if the message has a header
         if(!requestHeader.hasHostHeader()){
@@ -101,6 +113,7 @@ public class ServerConnection implements Runnable {
             requestHeader = reader.readLine();
         } catch (IOException e) {
             //got an issue doing IO no idea what went wrong
+            System.out.println("nullpointer reader");
             e.printStackTrace();
         }
 
@@ -118,7 +131,7 @@ public class ServerConnection implements Runnable {
         List<String> headerLines = new ArrayList<>();
         try {
             //read all the lines while adding the lines to the string
-            while((line = reader.readLine()).equals("")){
+            while(!(line = reader.readLine()).equals("")){
                 headerLines.add(line);
             }
         } catch (IOException e) {
@@ -126,8 +139,40 @@ public class ServerConnection implements Runnable {
             e.printStackTrace();
         }
 
+        int size = headerLines.size();
+
         //return the received lines
-        return headerLines.toArray(new String[0]);
+        return headerLines.toArray(new String[size]);
+    }
+
+    static String[] readFileAtRelPath(Path relPath){
+        if(relPath.isAbsolute()){
+            throw new IllegalArgumentException("The path is not relative");
+        }
+        Path currentWorkingDir = Paths.get(System.getProperty("user.dir"));
+        Path filePath =  Paths.get(currentWorkingDir.toString(), relPath.toString());
+
+        //get the file located at the error path
+        File errorPage = new File(filePath.toUri());
+        //initialize the error array
+        List<String> fileLines = new ArrayList<>();
+
+        //create a stream to read from it
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(errorPage));
+            //start reading the lines, append them to the response body, keep reading until null
+            String line;
+            while((line = reader.readLine()) != null) {
+                fileLines.add(line);
+            }
+        } catch (IOException e ) {
+            //the file was not found, or there went something wrong with the streams
+            //anyway this is a server side error
+            throw new ServerException(HttpStatusCode.SERVER_ERROR);
+        }
+
+        int bodySize = fileLines.size();
+        return fileLines.toArray(new String[bodySize]);
     }
 
     /**
@@ -136,7 +181,24 @@ public class ServerConnection implements Runnable {
      */
     private String[] readMessageBody(){
         //todo implement probably needs different implementation for post and put (put needs to be an html page and end with null or </html>
-        return null;
+        //first get the reader
+        BufferedReader reader = this.getReader();
+        //initialize the line && the accumulator
+        String line;
+        List<String> messageBodyList = new ArrayList<>();
+        //then start to read until null
+        try {
+            while((line = reader.readLine()) != null){
+                //add lines to the message accumulator
+                messageBodyList.add(line);
+            }
+        } catch (IOException e) {
+            //something happened where we have no control over
+            e.printStackTrace();
+        }
+        //after all the lines are read convert to an array of strings
+        int messageLength = messageBodyList.size();
+        return messageBodyList.toArray(new String[messageLength]);
     }
 
     /**
