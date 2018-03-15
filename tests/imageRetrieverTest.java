@@ -26,7 +26,7 @@ public class imageRetrieverTest {
 
     @Test
     public void testImageRetriever() throws IOException {
-        String currentHost = (new URL("http://www.symbolica.be")).getHost();
+        String currentHost = (new URL("http://www.pics4learning.com")).getHost();
         InetAddress address = InetAddress.getByName(currentHost);
         Socket socket = new Socket(address, 80);
 
@@ -56,17 +56,21 @@ public class imageRetrieverTest {
 
         String siteContent = baos.toString();
 
-        inputStream.close();
-        outStream.close();
-        socket.close();
 
 
         Elements images = ParseHTML.scanForEmbeddedImages(siteContent);
         ArrayList imagelist = ParseHTML.getImageLinkList(images);
 
+        inputStream.close();
 
+        outStream.close();
+
+        socket.close();
 
         ImageRetriever.retrieveImages(imagelist, currentHost);
+
+
+
 
 
 

@@ -6,6 +6,8 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.file.Files;
+import java.rmi.UnexpectedException;
 import java.util.*;
 
 
@@ -15,8 +17,17 @@ public class ImageRetriever {
     //Retrieve all images embedded in the html.
     public static void retrieveImages(List<String> imagelist, String currentHost) throws IOException {
 
+        String fileSystemSeperator = null;
 
-
+        if (System.getProperty("os.name").startsWith("Windows")){
+            fileSystemSeperator = "\\";
+        }
+        else if (System.getProperty("os.name").startsWith("Mac")){
+            fileSystemSeperator = "/";
+        }
+        else{
+            throw new UnexpectedException("no OS recognized");
+        }
 
 
         List<String> internalImages = getInternalLinkList(imagelist);
@@ -26,6 +37,7 @@ public class ImageRetriever {
 
 
         for (String imageURI: internalImages){
+
             Socket socket = new Socket(currentHost, 80);
 
             PrintWriter outStream
@@ -36,40 +48,70 @@ public class ImageRetriever {
             outStream.println();
             outStream.flush();
 
+            InputStream inputStream = socket.getInputStream();
 
 
-
-            java.io.DataInputStream inputStream
-                    = new java.io.DataInputStream(socket.getInputStream());
+            java.io.DataInputStream dataInputStream
+                    = new java.io.DataInputStream(inputStream);
             String workingDir = System.getProperty("user.dir");
-            File file = new File(workingDir +"/imageCache/"+imageURI);
+            File file = new File(workingDir + fileSystemSeperator +"imageCache"+ fileSystemSeperator +imageURI);
             file.getParentFile().mkdirs();
             file.createNewFile();
             DataOutputStream dos = new DataOutputStream(new FileOutputStream(file));
             int size;
             byte[] buffer = new byte[8192];
-            while ((size = inputStream.read(buffer)) > 0){
+            while ((size = dataInputStream.read(buffer)) > 0){
                 dos.write(buffer, 0, size);
                 dos.flush();
             }
             dos.close();
+
 
             inputStream.close();
             outStream.close();
             socket.close();
 
 
+            //Remove HTTP Header from file to make it readable
+            InputStream fileStream = com.google.common.io.Files.asByteSource(file).openStream();
+            File cleanedFile = new File(workingDir + fileSystemSeperator +"imageCache"+fileSystemSeperator+"cleanedFiles" +fileSystemSeperator+imageURI);
+            cleanedFile.getParentFile().mkdirs();
+            cleanedFile.createNewFile();
+            OutputStream headerRemove = new FileOutputStream(cleanedFile);
+            int count, offset;
+            byte[] cleanerBuffer = new byte[2048];
+            boolean eohFound = false;
+            while ((count = fileStream.read(cleanerBuffer)) != -1)
+            {
+                offset = 0;
+                if(!eohFound){
+                    String string = new String(cleanerBuffer, 0, count);
+                    int indexOfEOH = string.indexOf("\r\n\r\n");
+                    if(indexOfEOH != -1) {
+                        count = count-indexOfEOH-4;
+                        offset = indexOfEOH+4;
+                        eohFound = true;
+                    } else {
+                        count = 0;
+                    }
+                }
+                headerRemove.write(cleanerBuffer, offset, count);
+                headerRemove.flush();
+            }
+            fileStream.close();
+            headerRemove.close();
+
+
         }
 
         for (String imageURI: externalImages){
             String externalHost = (new URL(imageURI)).getHost();
-            System.out.println(externalHost);
             Socket socket = new Socket(externalHost, 80);
 
             PrintWriter outStream
                     = new PrintWriter(socket.getOutputStream());
 
-            outStream.println("GET /" +imageURI +" HTTP/1.1");
+            outStream.println("GET /" +imageURI.split(externalHost +"/")[1] +" HTTP/1.1");
             outStream.println("Host: " + externalHost);
             outStream.println();
             outStream.flush();
@@ -80,23 +122,49 @@ public class ImageRetriever {
             java.io.DataInputStream inputStream
                     = new java.io.DataInputStream(socket.getInputStream());
             String workingDir = System.getProperty("user.dir");
-            File file = new File(workingDir +"/imageCache/"+imageURI);
+            File file = new File(workingDir +fileSystemSeperator+"imageCache"+fileSystemSeperator+imageURI);
             file.getParentFile().mkdirs();
             file.createNewFile();
             DataOutputStream dos = new DataOutputStream(new FileOutputStream(file));
             int size;
             byte[] buffer = new byte[8192];
             while ((size = inputStream.read(buffer)) > 0){
-                System.out.println(size);
                 dos.write(buffer, 0, size);
                 dos.flush();
             }
             dos.close();
 
-            System.out.println("image transfer done");
             inputStream.close();
             outStream.close();
             socket.close();
+
+            InputStream fileStream = com.google.common.io.Files.asByteSource(file).openStream();
+            File cleanedFile = new File(workingDir +fileSystemSeperator+"imageCache"+fileSystemSeperator+"cleanedFiles"+fileSystemSeperator+imageURI);
+            cleanedFile.getParentFile().mkdirs();
+            cleanedFile.createNewFile();
+            OutputStream headerRemove = new FileOutputStream(cleanedFile);
+            int count, offset;
+            byte[] cleanerBuffer = new byte[2048];
+            boolean eohFound = false;
+            while ((count = fileStream.read(cleanerBuffer)) != -1)
+            {
+                offset = 0;
+                if(!eohFound){
+                    String string = new String(cleanerBuffer, 0, count);
+                    int indexOfEOH = string.indexOf("\r\n\r\n");
+                    if(indexOfEOH != -1) {
+                        count = count-indexOfEOH-4;
+                        offset = indexOfEOH+4;
+                        eohFound = true;
+                    } else {
+                        count = 0;
+                    }
+                }
+                headerRemove.write(cleanerBuffer, offset, count);
+                headerRemove.flush();
+            }
+            fileStream.close();
+            headerRemove.close();
 
 
         }
