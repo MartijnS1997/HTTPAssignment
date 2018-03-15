@@ -53,3 +53,11 @@ Temporary Items
 out/production/HTTPAssignment/Client.class
 
 *.xml
+
+.idea/workspace.xml
+
+HTTPAssignment.iml
+
+out/*
+
+imageCache/*
