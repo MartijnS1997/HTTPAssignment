@@ -35,15 +35,15 @@ public class HttpHeadRequest extends HttpRequest {
 
     private String receiveResponse(DataInputStream inputStream) throws IOException {
         //initialize the strings
-
-        String response = null;
+        String response;
         //get the input stream reader
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        String line = null;
+        String line;
         //initialize the builder
         StringBuilder responseBodyBuilder = new StringBuilder();
 
-        while((line = reader.readLine())!=null) {
+
+        while(!(line = reader.readLine()).equals("")) {
             //append the line
             responseBodyBuilder.append(line);
             //also add newline feed
@@ -65,7 +65,7 @@ public class HttpHeadRequest extends HttpRequest {
         //generate he string array
         String request[] = new String[3];
         //generate the first line
-        request[0] = GET + " " + path + " " + HTTP_VERSION;
+        request[0] = HEAD + " " + path + " " + HTTP_VERSION;
         //also add the host
         request[1] = HOST + host;
         //request to keep the connection alive

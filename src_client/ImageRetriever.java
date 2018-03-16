@@ -7,6 +7,8 @@ import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.rmi.UnexpectedException;
 import java.util.*;
 
@@ -17,22 +19,13 @@ public class ImageRetriever {
     //Retrieve all images embedded in the html.
     public static void retrieveImages(List<String> imagelist, String currentHost) throws IOException {
 
-        String fileSystemSeperator = null;
-
-        if (System.getProperty("os.name").startsWith("Windows")){
-            fileSystemSeperator = "\\";
-        }
-        else if (System.getProperty("os.name").startsWith("Mac")){
-            fileSystemSeperator = "/";
-        }
-        else{
-            throw new UnexpectedException("no OS recognized");
-        }
+        Path path;
+        String workingDir = System.getProperty("user.dir");
 
 
         List<String> internalImages = getInternalLinkList(imagelist);
         List<String> externalImages = getExternalLinkList(imagelist);
-        Map<String, List<String>> externalImageMap = sortExternalLinksByHost(externalImages);
+
 
 
 
@@ -53,8 +46,8 @@ public class ImageRetriever {
 
             java.io.DataInputStream dataInputStream
                     = new java.io.DataInputStream(inputStream);
-            String workingDir = System.getProperty("user.dir");
-            File file = new File(workingDir + fileSystemSeperator +"imageCache"+ fileSystemSeperator +imageURI);
+            path = Paths.get(workingDir,"imageCache", imageURI);
+            File file = new File(path.toUri());
             file.getParentFile().mkdirs();
             file.createNewFile();
             DataOutputStream dos = new DataOutputStream(new FileOutputStream(file));
@@ -71,10 +64,12 @@ public class ImageRetriever {
             outStream.close();
             socket.close();
 
+            path = Paths.get(workingDir ,"imageCache", "cleanedFiles" ,imageURI);
 
             //Remove HTTP Header from file to make it readable
             InputStream fileStream = com.google.common.io.Files.asByteSource(file).openStream();
-            File cleanedFile = new File(workingDir + fileSystemSeperator +"imageCache"+fileSystemSeperator+"cleanedFiles" +fileSystemSeperator+imageURI);
+            File cleanedFile = new File(path.toUri());
+
             cleanedFile.getParentFile().mkdirs();
             cleanedFile.createNewFile();
             OutputStream headerRemove = new FileOutputStream(cleanedFile);
@@ -121,8 +116,8 @@ public class ImageRetriever {
 
             java.io.DataInputStream inputStream
                     = new java.io.DataInputStream(socket.getInputStream());
-            String workingDir = System.getProperty("user.dir");
-            File file = new File(workingDir +fileSystemSeperator+"imageCache"+fileSystemSeperator+imageURI);
+            path = Paths.get(workingDir, "imageCache", imageURI);
+            File file = new File(path.toUri());
             file.getParentFile().mkdirs();
             file.createNewFile();
             DataOutputStream dos = new DataOutputStream(new FileOutputStream(file));
@@ -139,7 +134,9 @@ public class ImageRetriever {
             socket.close();
 
             InputStream fileStream = com.google.common.io.Files.asByteSource(file).openStream();
-            File cleanedFile = new File(workingDir +fileSystemSeperator+"imageCache"+fileSystemSeperator+"cleanedFiles"+fileSystemSeperator+imageURI);
+            path = Paths.get(workingDir, "imageCache", "cleanedFiles",imageURI);
+
+            File cleanedFile = new File(path.toUri());
             cleanedFile.getParentFile().mkdirs();
             cleanedFile.createNewFile();
             OutputStream headerRemove = new FileOutputStream(cleanedFile);
