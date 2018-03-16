@@ -47,7 +47,6 @@ public abstract class HttpRequest  {
     protected void sendRequestHeader(String[] requestHeader, PrintWriter outputWriter){
         //write all the messages line for line to the server
         for(String requestString: requestHeader){
-            //System.out.println(requestString);
             outputWriter.println(requestString);
         }
         //then add empty line to finish the request

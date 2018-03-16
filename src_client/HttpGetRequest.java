@@ -1,5 +1,8 @@
+import org.jsoup.select.Elements;
+
 import java.io.*;
 import java.net.URL;
+import java.util.ArrayList;
 
 /**
  * Created by Martijn on 8/03/2018.
@@ -51,6 +54,19 @@ public class HttpGetRequest extends HttpRequest {
 
         this.saveHtmlPage(responseBody, "GetResult");
 
+        //Retrieve the embedded images from a site and save them to "imageCache"
+        Elements images = ParseHTML.scanForEmbeddedImages(responseBody);
+
+        ArrayList imageList = ParseHTML.getImageLinkList(images);
+
+        try {
+            ImageRetriever.retrieveImages(imageList, getUrl().getHost());
+
+        } catch (IOException e) {
+            //Fault in imageRetriever
+            e.printStackTrace();
+        }
+        //TODO: append /HTTPAssignment/imageCache/cleanedFiles to filePath
         return responseHeader + "\n" + responseBody;
     }
 
