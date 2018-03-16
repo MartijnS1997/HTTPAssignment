@@ -36,10 +36,19 @@ public class ServerConnection implements Runnable {
             try {
                 HttpRequestResponse response = readRequest();
                 response.sendResponse(this.getPrintWriter());
+            //catch any exceptions thrown by the server that could not be handled in the requests
+            } catch (ServerException e){
+                writeErrorMessage(e.getStatusCode());
+                if(e.getStatusCode().equals(HttpStatusCode.TIMEOUT)){
+                    break;
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+
+        terminateConnection();
+        System.out.println("Connection terminated");
 
     }
 
@@ -58,6 +67,19 @@ public class ServerConnection implements Runnable {
         }catch(IOException e){
             //something went wrong, dunno what
             e.printStackTrace();
+        }
+    }
+
+    private void terminateConnection(){
+        PrintWriter writer = this.getPrintWriter();
+        BufferedReader reader = this.getReader();
+        Socket socket = this.getConnectionSocket();
+        try {
+            writer.close();
+            reader.close();
+            socket.close();
+        }catch(IOException e){
+            //do nothing
         }
     }
 
@@ -99,7 +121,9 @@ public class ServerConnection implements Runnable {
      * @param statusCode th status code that needs to be written
      */
     private void writeErrorMessage(HttpStatusCode statusCode){
-        //todo implement the error message
+        PrintWriter writer = this.getPrintWriter();
+        ResponseHeader header = new ResponseHeader(statusCode);
+        header.writeResponseHeader(writer);
     }
 
     /**
@@ -112,12 +136,22 @@ public class ServerConnection implements Runnable {
         String requestHeader = null;
 
         try {
+            //get the start time of the listening process
+            long startTimeMillis = System.currentTimeMillis();
             //read the input until not null
             boolean inputStarted = false;
+
             while(!inputStarted){
+                //get the time passed
+
                 requestHeader = reader.readLine();
                 if(requestHeader == null || reader.equals("")){
-                    //do nothing
+                    //check if the time has exceeded the maximum allowed time
+                    long timePassed = System.currentTimeMillis() - startTimeMillis;
+                    //divide by 1000 to get seconds
+                    if(timePassed/1000f > TIMEOUT_SECONDS){
+                        throw new ServerException(HttpStatusCode.TIMEOUT);
+                    }
                 }else{
                     inputStarted = true;
                 }
@@ -125,7 +159,6 @@ public class ServerConnection implements Runnable {
 //            requestHeader = reader.readLine();
         } catch (IOException e) {
             //got an issue doing IO no idea what went wrong
-            System.out.println("nullpointer reader");
             e.printStackTrace();
         }
 
@@ -266,4 +299,9 @@ public class ServerConnection implements Runnable {
      */
     private BufferedReader reader;
 
+
+    /*
+    Constants
+     */
+    private final static int TIMEOUT_SECONDS = 10;
 }

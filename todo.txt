@@ -1,0 +1,6 @@
+1. change the destination of the get request html page to a separate folder
+2. deal with concurrency issues of the file system
+3. implement the post request on the server
+4. add timeout to server
+5. use one socket to download images
+6. support bad request, timeout and server error headers

@@ -3,7 +3,7 @@
  * an enum of http status codes
  */
 public enum HttpStatusCode {
-    OK, BAD_REQUEST, NOT_FOUND, SERVER_ERROR, NOT_MODIFIED;
+    OK, BAD_REQUEST, NOT_FOUND, SERVER_ERROR, NOT_MODIFIED, TIMEOUT;
 
     public int toInt(){
         switch (this){
@@ -17,6 +17,8 @@ public enum HttpStatusCode {
                 return 500;
             case NOT_MODIFIED:
                 return 304;
+            case TIMEOUT:
+                return 408;
             default:
                 return 500;
         }
@@ -42,6 +44,8 @@ public enum HttpStatusCode {
                 return codeString + " " + SERVER_ERROR_STRING;
             case NOT_MODIFIED:
                 return codeString + " " + NOT_MODIFIED_STRING;
+            case TIMEOUT:
+                return codeString + " " + TIMEOUT_STRING;
             default:
                 //wont happen
                 return "";
@@ -54,6 +58,7 @@ public enum HttpStatusCode {
     private final static String NOT_FOUND_STRING = "Not Found";
     private final static String SERVER_ERROR_STRING= "Internal Server Error";
     private final static String NOT_MODIFIED_STRING = "Not Modified";
+    private final static String TIMEOUT_STRING = "Request Timeout";
 
     protected final static String HTTP_VERION_STRING = "HTTP/1.1";
 }

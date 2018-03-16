@@ -1,5 +1,6 @@
 import java.io.PrintWriter;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -82,6 +83,18 @@ public abstract class HttpRequestResponse {
     }
 
     /**
+     * get the path to write the output files
+     * @return the path to write the output to
+     */
+    protected Path getOutPutPath(){
+        String outputDir = OUTPUT_DIR;
+        String currentWorkingDir = System.getProperty("user.dir");
+        Path outPutPath = Paths.get(currentWorkingDir, outputDir);
+
+        return outPutPath;
+    }
+
+    /**
      * Getter for the server path, the path used by the server for locating files that interact with the request
      * @return the path containing the file to interact with
      */
@@ -121,4 +134,5 @@ public abstract class HttpRequestResponse {
     protected final static String CONTENT_LENGTH_STRING = "Content-Lenght: ";
     protected final static String CONTENT_TEXT_HTML_TYPE = "text/html";
     protected final static String CONTENT_CHARSET_ISO = "; charset=iso-8859-1";
+    protected final static String OUTPUT_DIR = "/requestOutputs";
 }

@@ -51,7 +51,7 @@ public abstract class HttpTransferRequestResponse extends HttpRequestResponse {
     protected void sendError404Message(PrintWriter writer) {
 
         //create the standard header, ready to be expanded
-        List<String> error404Header = super.createResponseHeader(HttpStatusCode.NOT_FOUND);
+        //List<String> error404Header = super.createResponseHeader(HttpStatusCode.NOT_FOUND);
 
         Path fileLocationOnServer = ERROR_404_PAGE_PATH;
         ServerFileSystem fileSystem = this.getFileSystem();

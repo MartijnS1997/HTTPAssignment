@@ -6,9 +6,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 import static junit.framework.TestCase.assertEquals;
@@ -83,5 +82,19 @@ public class parserTests {
         }
 
         assert(nbChars == 12L);
+    }
+
+    @Test
+    public void parsePlus(){
+        String testString = "hello+world+!";
+        String splitString[] = testString.split("\\+");
+        System.out.println(Arrays.toString(splitString));
+    }
+
+    @Test
+    public void testStringCleaner(){
+        String stringArray[] = new String[] {"", "hey", "", "not empty"};
+        List<String> cleanedLines = Arrays.stream(stringArray).filter(s -> !s.equals("")).collect(Collectors.toList());
+        System.out.println(cleanedLines);
     }
 }
