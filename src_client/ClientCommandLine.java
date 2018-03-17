@@ -80,8 +80,12 @@ public class ClientCommandLine {
 
         //send the query to the user:
         printer.println(CONTINUE_SESSION);
-        try {
-            String line = reader.readLine();
+        try {String line;
+            //check if the line is empty
+            if((line = reader.readLine()).equals("")){
+                //if so start function again
+                return anotherCommand();
+            }
             switch (line){
                 case YES:
                     return true;
@@ -90,6 +94,7 @@ public class ClientCommandLine {
                 default:
                     //in this case invalid input was issued, try again
                     printer.println(RETRY_CONTINUE);
+                    //empty the line reader
                     return anotherCommand();
             }
         } catch (IOException e) {
