@@ -1,3 +1,6 @@
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.*;
@@ -42,7 +45,6 @@ public class HttpGetRequest extends HttpRequest {
         String responseBody = null;
         //get the input stream reader
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        String line = null;
         //read from the stream while concatenating
         try {
             responseHeader = getResponseHeader(reader);
@@ -52,7 +54,7 @@ public class HttpGetRequest extends HttpRequest {
             e.printStackTrace();
         }
 
-        this.saveHtmlPage(responseBody, "GetResult");
+
 
         //Retrieve the embedded images from a site and save them to "imageCache"
         Elements images = ParseHTML.scanForEmbeddedImages(responseBody);
@@ -67,6 +69,18 @@ public class HttpGetRequest extends HttpRequest {
             e.printStackTrace();
         }
         //TODO: append /HTTPAssignment/imageCache/cleanedFiles to filePath
+
+        Document doc = Jsoup.parse(responseBody);
+        Elements imagesToReplace = doc.select("img");
+        for(Element img: imagesToReplace){
+            String source = img.attr("src");
+            String newSource = "imageCache/cleanedFiles/"+source;
+            img.attr("src", newSource);
+
+
+        }
+
+        this.saveHtmlPage(doc.toString(), "GetResult");
         return responseHeader + "\n" + responseBody;
     }
 
