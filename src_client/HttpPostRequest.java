@@ -38,13 +38,17 @@ public class HttpPostRequest extends HttpRequest {
             path = "/";
         }
         //generate he string array
-        String request[] = new String[3];
+        String request[] = new String[5];
         //generate the first line
         request[0] = POST+ " " + path + " " + HTTP_VERSION;
         //also add the host
         request[1] = HOST + host;
-        //request to keep the connection alive
-        request[2] = getMessageBody();
+
+        request[2] = "Content-Type: java.lang.String";
+
+        request[3] = String.valueOf(getMessageBody().length());
+
+        request[4] = getMessageBody();
 
         return request;
     }
