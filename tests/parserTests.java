@@ -39,15 +39,15 @@ public class parserTests {
         assert(clientCommand.needsMessageBody());
     }
 
-    @Test
-    public void testMethod(){
-        System.out.println(HttpRequestMethod.GET.toString());
-        System.out.println(HttpRequestMethod.PUT.toString());
-        System.out.println(HttpRequestMethod.POST.toString());
-        System.out.println(HttpRequestMethod.HEAD.toString());
-
-
-    }
+//    @Test
+//    public void testMethod(){
+//        System.out.println(HttpRequestMethod.GET.toString());
+//        System.out.println(HttpRequestMethod.PUT.toString());
+//        System.out.println(HttpRequestMethod.POST.toString());
+//        System.out.println(HttpRequestMethod.HEAD.toString());
+//
+//
+//    }
 
     @Test
     public void localHostTest() throws MalformedURLException, UnknownHostException {
@@ -68,21 +68,21 @@ public class parserTests {
         System.out.println(dateFormat.format(calendar.getTime()));
 
     }
-
-    @Test
-    public void testCharCounter(){
-        String content[] = new String[]{"hey", "bob", "and", "ann"};
-        int nbLines = content.length;
-        Long nbChars = 0L;
-        try{
-            nbChars = LongStream.range(0, nbLines).map(l -> (content[Math.toIntExact(l)]).length()).sum();
-        } catch(ArithmeticException e){
-            throw new ServerException(HttpStatusCode.SERVER_ERROR);
-
-        }
-
-        assert(nbChars == 12L);
-    }
+//
+//    @Test
+//    public void testCharCounter(){
+//        String content[] = new String[]{"hey", "bob", "and", "ann"};
+//        int nbLines = content.length;
+//        Long nbChars = 0L;
+//        try{
+//            nbChars = LongStream.range(0, nbLines).map(l -> (content[Math.toIntExact(l)]).length()).sum();
+//        } catch(ArithmeticException e){
+//            throw new ServerException(HttpStatusCode.SERVER_ERROR);
+//
+//        }
+//
+//        assert(nbChars == 12L);
+//    }
 
     @Test
     public void parsePlus(){
