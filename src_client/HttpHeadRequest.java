@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -17,7 +19,7 @@ public class HttpHeadRequest extends HttpRequest {
         URL url = this.getUrl();
         String host = url.getHost();
         String path = url.getPath();
-        String requestMessage[] = buildHeadRequest(host, path);
+        List<String> requestMessage = buildHeadRequest(host, path);
 
         //send the newly created message
         sendRequestHeader(requestMessage, outputWriter);
@@ -58,18 +60,18 @@ public class HttpHeadRequest extends HttpRequest {
     }
 
 
-    private static String[] buildHeadRequest(String host, String path){
+    private static List<String> buildHeadRequest(String host, String path){
         if(path.equals("")){
             path = "/";
         }
         //generate he string array
-        String request[] = new String[3];
+        List<String> request = new ArrayList<>();
         //generate the first line
-        request[0] = HEAD + " " + path + " " + HTTP_VERSION;
+        request.add(HEAD + " " + path + " " + HTTP_VERSION);
         //also add the host
-        request[1] = HOST + host;
+        request.add(HOST + host);
         //request to keep the connection alive
-        request[2] = KEEP_CONNECTION_ALIVE;
+        request.add(KEEP_CONNECTION_ALIVE);
 
         return request;
     }

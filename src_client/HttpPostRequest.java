@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Martijn on 8/03/2018.
@@ -8,7 +10,7 @@ import java.net.URL;
  */
 public class HttpPostRequest extends HttpRequest {
 
-    public HttpPostRequest(URL url, String messageBody) {
+    public HttpPostRequest(URL url, List<String> messageBody) {
         super(url);
         this.messageBody = messageBody;
     }
@@ -18,10 +20,19 @@ public class HttpPostRequest extends HttpRequest {
         URL url = this.getUrl();
         String host = url.getHost();
         String path = url.getPath();
-        String requestMessage[] = buildPostRequest(host, path);
+        List<String> requestMessage = buildPostRequest(host, path);
 
-        //send the newly created message
+        //send the newly created message header
         sendRequestHeader(requestMessage, outputWriter);
+
+        //get the message body
+        List<String> messageBody = this.getMessageBody();
+
+        //send the message body
+        for(String messageLine: messageBody){
+            outputWriter.println(messageLine);
+        }
+        outputWriter.flush();
 
         //read the input from the stream
         try {
@@ -33,18 +44,27 @@ public class HttpPostRequest extends HttpRequest {
 
     }
 
-    private String[] buildPostRequest(String host, String path) {
+    private List<String> buildPostRequest(String host, String path) {
         if(path.equals("")){
             path = "/";
         }
         //generate he string array
-        String request[] = new String[3];
+        List<String> request = new ArrayList<>();
         //generate the first line
-        request[0] = POST+ " " + path + " " + HTTP_VERSION;
+        request.add(POST+ " " + path + " " + HTTP_VERSION);
         //also add the host
-        request[1] = HOST + host;
-        //request to keep the connection alive
-        request[2] = getMessageBody();
+        request.add(HOST + host);
+        request.add(CONTENT_TYPE + CONTENTT_TYPE_HTML_TXT);
+        //add the content length
+        List<String> contentLines = this.getMessageBody();
+        //newlines were omitted while reading, add them back to the content
+        long contentChars = contentLines.size();
+        for(String line: contentLines){
+            contentChars+= line.length();
+        }
+        //add the content length: the nb of bytes (or ascii chars)
+        request.add(CONTENT_LENGTH + contentChars);
+
 
         return request;
     }
@@ -74,11 +94,11 @@ public class HttpPostRequest extends HttpRequest {
     }
 
 
-    public String getMessageBody() {
+    public List<String> getMessageBody() {
         return messageBody;
     }
 
-    private String messageBody;
+    private List<String> messageBody;
 
 
 }

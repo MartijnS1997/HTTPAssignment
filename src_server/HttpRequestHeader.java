@@ -32,4 +32,10 @@ public interface HttpRequestHeader {
      */
     boolean hasIfModifiedSince();
 
+    /**
+     * Get the size of the content received by the http connection
+     * @return the content length of the message body in bytes
+     */
+    long getContentLength();
+
 }

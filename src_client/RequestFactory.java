@@ -1,4 +1,5 @@
 import java.net.URL;
+import java.util.List;
 
 /**
  * Created by Martijn on 8/03/2018.
@@ -17,7 +18,7 @@ public class RequestFactory {
      * @param messageBody message used for post and put requests, may be ignored if get or head request
      * @return a http request object ready to execute
      */
-    public static HttpRequest createRequest(ClientCommand clientCommand, String messageBody){
+    public static HttpRequest createRequest(ClientCommand clientCommand, List<String> messageBody){
         //first we need to check if there needs to be added a message body
         //extract the type from the command
         HttpRequestCommand httpCommand = clientCommand.getCommandType();
@@ -46,7 +47,7 @@ public class RequestFactory {
      * @param messageBody the message to add to the request
      * @return a http put request object ready to execute
      */
-    private static HttpPutRequest createPutRequest(ClientCommand clientCommand, String messageBody){
+    private static HttpPutRequest createPutRequest(ClientCommand clientCommand, List<String> messageBody){
         URL url = clientCommand.getUrl();
         return new HttpPutRequest(url, messageBody);
     }
@@ -57,7 +58,7 @@ public class RequestFactory {
      * @param messageBody the message to add to the request
      * @return a http post request object ready to execute
      */
-    private static HttpPostRequest createPostRequest(ClientCommand clientCommand, String messageBody){
+    private static HttpPostRequest createPostRequest(ClientCommand clientCommand, List<String> messageBody){
         URL url = clientCommand.getUrl();
         return new HttpPostRequest(url, messageBody);
     }

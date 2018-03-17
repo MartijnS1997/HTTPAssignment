@@ -66,6 +66,7 @@ public class RequestResponseFactory {
      * @return a HttpPutRequestResponse object
      */
     private static HttpPutRequestResponse generatePutResponse(HttpRequestLine requestLine, String[] messageBody, ServerFileSystem fileSystem){
+        System.out.println("Put request created");
         return new HttpPutRequestResponse(requestLine.getPath(), fileSystem, messageBody);
     }
 

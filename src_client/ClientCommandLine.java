@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Martijn on 9/03/2018.
@@ -154,7 +156,7 @@ public class ClientCommandLine {
         connect(command);
 
         //initialize the message body, will remain empty if
-        String messageBody = "";
+        List<String> messageBody = new ArrayList<>();
         if(command.needsMessageBody()){
             messageBody = getMessageBody();
         }
@@ -209,7 +211,7 @@ public class ClientCommandLine {
      * Method that retrieves the message body from the command line
      * @return the message body for the http client
      */
-    private String getMessageBody(){
+    private List<String> getMessageBody(){
         //first create a scanner that reads input from the command line client
         BufferedReader reader = this.getReader();/*new BufferedReader( new InputStreamReader(this.getReadStream()));*/
         PrintStream printer = this.getPrintStream();
@@ -219,7 +221,7 @@ public class ClientCommandLine {
         //read the input, do this until the
         boolean scanning = true;
         StringBuilder builder = new StringBuilder(BUILDER_CAPACITY);
-
+        List<String> messageBody = new ArrayList<>();
         //scan for the body
         while(scanning){
             try {
@@ -230,7 +232,7 @@ public class ClientCommandLine {
                     continue;
                 }
                 //else add to the builder
-                builder.append(line);
+                messageBody.add(line);
             } catch (IOException e) {
                 //idk what happened
                 e.printStackTrace();
@@ -238,11 +240,11 @@ public class ClientCommandLine {
         }
 
         //check if the length is zero, if so throw error
-        if(builder.length() == 0){
+        if(messageBody.size() == 0){
             throw new ClientException(EMPTY_MESSAGE_BODY);
         }
         //now build the string
-        return  builder.toString();
+        return  messageBody;
     }
 
     /**

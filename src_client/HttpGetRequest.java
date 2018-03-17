@@ -4,8 +4,10 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Martijn on 8/03/2018.
@@ -24,7 +26,7 @@ public class HttpGetRequest extends HttpRequest {
         URL url = this.getUrl();
         String host = url.getHost();
         String path = url.getPath();
-        String requestMessage[] = buildGetRequest(host, path);
+        List<String> requestMessage = buildGetRequest(host, path);
 
         //send the newly created message
         sendRequestHeader(requestMessage, outputWriter);
@@ -68,21 +70,39 @@ public class HttpGetRequest extends HttpRequest {
             //Fault in imageRetriever
             e.printStackTrace();
         }
-        //TODO: append /HTTPAssignment/imageCache/cleanedFiles to filePath
+        replaceHtmlImageSources(responseBody);
 
+        return responseHeader + "\n" + responseBody;
+    }
+
+    /**
+     * Replaces all the occurrences of image reference to the locally downloaded image
+     * @param responseBody the string to analyze
+     */
+    private void replaceHtmlImageSources(String responseBody) {
+        //TODO: append /HTTPAssignment/imageCache/cleanedFiles to filePath
+        //TODO check if external URL, if so rename with the path
         Document doc = Jsoup.parse(responseBody);
         Elements imagesToReplace = doc.select("img");
         for(Element img: imagesToReplace){
             String source = img.attr("src");
-            String newSource = "imageCache/cleanedFiles/"+source;
+            String newSource = "imageCache/cleanedFiles/"+ getRenamedSource(source);
             img.attr("src", newSource);
-
-
         }
 
         this.saveHtmlPage(doc.toString(), "GetResult");
-        return responseHeader + "\n" + responseBody;
     }
+    private static String getRenamedSource(String source){
+        try {
+            URL sourceUrl = new URL(source);
+            return sourceUrl.getPath().substring(1);
+        } catch (MalformedURLException e) {
+            //the case that the source isn't a url
+            //just return the source
+            return source;
+        }
+    }
+
 
     private String getResponseMessageBody(BufferedReader reader) throws IOException {
         //initialize the builder
@@ -134,18 +154,18 @@ public class HttpGetRequest extends HttpRequest {
      * @param path the path used in the request
      * @return an array of string where each string is a single line in the command
      */
-    private static String[] buildGetRequest(String host, String path){
+    private static List<String> buildGetRequest(String host, String path){
         if(path.equals("")){
             path = "/";
         }
         //generate he string array
-        String request[] = new String[NB_LINES_IN_COMMAND];
+        List<String> request= new ArrayList<>();
         //generate the first line
-        request[0] = GET + " " + path + " " + HTTP_VERSION;
+        request.add(GET + " " + path + " " + HTTP_VERSION);
         //also add the host
-        request[1] = HOST + host;
+        request.add(HOST + host);
         //request to keep the connection alive
-        request[2] = KEEP_CONNECTION_ALIVE;
+        request.add(KEEP_CONNECTION_ALIVE);
 
         return request;
     }

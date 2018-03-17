@@ -97,4 +97,11 @@ public class parserTests {
         List<String> cleanedLines = Arrays.stream(stringArray).filter(s -> !s.equals("")).collect(Collectors.toList());
         System.out.println(cleanedLines);
     }
+
+    @Test
+    public void testURLPath() throws MalformedURLException {
+        String urlString = "https://www.google.com/maps/what_are_you_looking_at";
+        URL url = new URL(urlString);
+        System.out.println(url.getPath().substring(1));
+    }
 }

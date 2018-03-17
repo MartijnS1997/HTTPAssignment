@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Martijn on 8/03/2018.
@@ -8,7 +10,7 @@ import java.net.URL;
  */
 public class HttpPutRequest extends HttpRequest {
 
-    public HttpPutRequest(URL url, String messageBody) {
+    public HttpPutRequest(URL url, List<String> messageBody) {
         super(url);
         this.messageBody = messageBody;
     }
@@ -18,10 +20,22 @@ public class HttpPutRequest extends HttpRequest {
         URL url = this.getUrl();
         String host = url.getHost();
         String path = url.getPath();
-        String requestMessage[] = buildPutRequest(host, path);
+        List<String> messageBody = this.getMessageBody();
+        //get the header
+        List<String> requestHeader = buildPutRequestHeader(host, path);
 
-        //send the newly created message
-        sendRequestHeader(requestMessage, outputWriter);
+        //send the newly created header
+        sendRequestHeader(requestHeader, outputWriter);
+
+        System.out.println("Sending message body: ");
+
+        //send the message
+        for(String messageLine: messageBody){
+            outputWriter.println(messageLine);
+        }
+        outputWriter.flush();
+
+        System.out.println("Message sent");
 
         //read the input from the stream
         try {
@@ -33,18 +47,33 @@ public class HttpPutRequest extends HttpRequest {
 
     }
 
-    private String[] buildPutRequest(String host, String path) {
+    /**
+     * Creates a header for a put request
+     * @param host the host to send to
+     * @param path the path where the request will be placed
+     * @return A list of strings where each string is a line to send
+     */
+    private List<String> buildPutRequestHeader(String host, String path) {
         if(path.equals("")){
             path = "/";
         }
         //generate he string array
-        String request[] = new String[3];
+        List<String> request = new ArrayList<>();
         //generate the first line
-        request[0] = PUT+ " " + path + " " + HTTP_VERSION;
+        request.add(PUT+ " " + path + " " + HTTP_VERSION);
         //also add the host
-        request[1] = HOST + host;
-        //request to keep the connection alive
-        request[2] = getMessageBody();
+        request.add(HOST + host);
+        //add the content type
+        request.add(CONTENT_TYPE + CONTENTT_TYPE_HTML_TXT);
+        //add the content length
+        List<String> contentLines = this.getMessageBody();
+        //newlines were omitted while reading, add them back to the content
+        long contentChars = contentLines.size();
+        for(String line: contentLines){
+            contentChars+= line.length();
+        }
+        //add the content length: the nb of bytes (or ascii chars)
+        request.add(CONTENT_LENGTH + contentChars);
 
         return request;
     }
@@ -59,11 +88,12 @@ public class HttpPutRequest extends HttpRequest {
         //initialize the builder
         StringBuilder responseBodyBuilder = new StringBuilder();
 
-        while((line = reader.readLine())!=null) {
+        while(!(line = reader.readLine()).equals("")) {
             //append the line
             responseBodyBuilder.append(line);
             //also add newline feed
             responseBodyBuilder.append("\n");
+            System.out.println(line);
         }
 
 
@@ -74,10 +104,10 @@ public class HttpPutRequest extends HttpRequest {
     }
 
 
-    public String getMessageBody() {
+    public List<String> getMessageBody() {
         return messageBody;
     }
 
-    private String messageBody;
+    private List<String> messageBody;
 
 }

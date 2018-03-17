@@ -44,6 +44,7 @@ public class ServerConnection implements Runnable {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                break;
             }
         }
 
@@ -91,7 +92,7 @@ public class ServerConnection implements Runnable {
     private HttpRequestResponse readRequest(){
         //steps of the request
         //1. read the request line
-        //2. read the body (host necesarry)
+        //2. read the body (host necessary)
         //3. (optional) retrieve the extra body check this by using the parsed input
         String requestLineString = readRequestLine();
         System.out.println("The request: " + requestLineString);
@@ -100,13 +101,14 @@ public class ServerConnection implements Runnable {
         System.out.println("Header: " + Arrays.toString(requestHeaderString));
         HttpRequestHeader requestHeader = HttpRequestParser.parseRequestHeader(requestHeaderString);
         //check if the message has a header
+
         if(!requestHeader.hasHostHeader()){
             writeErrorMessage(HttpStatusCode.BAD_REQUEST);
         }
         //check if we need to listen for a message body
         String[] messageBody = new String[0];
         if(HttpRequestMethod.hasMessageBody(requestLine.getMethod())){
-            messageBody = readMessageBody();
+            messageBody = readMessageBody(requestHeader);
         }
         //get the file system used by the server
         ServerFileSystem fileSystem = this.getServer().getFileSystem();
@@ -224,7 +226,7 @@ public class ServerConnection implements Runnable {
      * Reads the input stream for the message body
      * @return an array of strings where each entry equals one line from the request
      */
-    private String[] readMessageBody(){
+    private String[] readMessageBody(HttpRequestHeader requestHeader){
         //todo implement probably needs different implementation for post and put (put needs to be an html page and end with null or </html>
         //first get the reader
         BufferedReader reader = this.getReader();
@@ -233,9 +235,13 @@ public class ServerConnection implements Runnable {
         List<String> messageBodyList = new ArrayList<>();
         //then start to read until null
         try {
-            while((line = reader.readLine()) != null){
+            long toReceive = requestHeader.getContentLength();
+            //read until all received or connection closed
+            while(toReceive > 0&&((line = reader.readLine()) != null)){
                 //add lines to the message accumulator
                 messageBodyList.add(line);
+                //get the size of the message
+                toReceive-= (line.length() + 1); // the string + a CRLF
             }
         } catch (IOException e) {
             //something happened where we have no control over

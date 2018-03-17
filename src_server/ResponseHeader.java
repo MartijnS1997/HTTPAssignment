@@ -55,9 +55,11 @@ public class ResponseHeader {
      */
     public void writeResponseHeader(PrintWriter writer){
         List<String> headerLines = this.getHeaderLines();
+        System.out.println("header:\n" + headerLines);
         for(String headerLine: headerLines){
             writer.println(headerLine);
         }
+        System.out.println("header received");
         //print the final newline to indicate the start of the response
         writer.println();
     }

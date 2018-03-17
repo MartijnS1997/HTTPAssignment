@@ -127,6 +127,7 @@ public class HttpRequestParser {
         //ignore all the headers we do not need to implement
         String host = null;
         Timestamp ifModifiedSince = null;
+        long contentLength = 0;
 
         for(String headerLine: headers){
             //check if the headers contain a if modified since or a host
@@ -136,10 +137,14 @@ public class HttpRequestParser {
             if(isHost(headerLine)){
                 host = parseHostHeader(headerLine);
             }
+            if(isContentLength(headerLine)){
+                contentLength = parseContentLengthHeader(headerLine);
+            }
         }
         //declarations for autistic java, only wants final declarations (or effective finals) for its anonymous classes
         String sentHost = host;
         Timestamp sentIfModifiedSince = ifModifiedSince;
+        long sentContentLength = contentLength;
 
         // return the found headers
         return new HttpRequestHeader() {
@@ -165,6 +170,11 @@ public class HttpRequestParser {
             public boolean hasIfModifiedSince() {
                 //check if the if-modified-since part was found during traversing the header
                 return sentIfModifiedSince != null;
+            }
+
+            @Override
+            public long getContentLength() {
+                return sentContentLength;
             }
         };
     }
@@ -236,6 +246,16 @@ public class HttpRequestParser {
         return hostHeaderParts[1];
     }
 
+    private static boolean isContentLength(String contentLengthHeader){
+        return contentLengthHeader.startsWith(CONTENT_LENGTH);
+    }
+
+    private static long parseContentLengthHeader(String  contentLengthHeader){
+        //split on the space
+        String contentLengthHeaderParts[] = contentLengthHeader.split(" ");
+        return Long.parseLong(contentLengthHeaderParts[1]);
+    }
+
     /*
     Constants used for parsing the header
      */
@@ -243,6 +263,8 @@ public class HttpRequestParser {
     private final static String IF_MODIFIED_SINCE = "If-Modified-Since: ";
 
     private final static String HOST = "Host: ";
+
+    private final static String CONTENT_LENGTH = "Content-Length: ";
 
     private final static String DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
 }

@@ -3,6 +3,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * Created by Martijn on 8/03/2018.
@@ -30,7 +33,9 @@ public abstract class HttpRequest  {
      */
     public void saveHtmlPage(String htmlString, String filename){
         try {
-            PrintWriter out = new PrintWriter(filename + ".html");
+            String fileNameWithExtension = filename + ".html";
+            Path printPath = Paths.get(HTML_SAVEPAGE, fileNameWithExtension);
+            PrintWriter out = new PrintWriter(printPath.toString());
             out.print(htmlString);
             out.close();
         } catch (FileNotFoundException e) {
@@ -44,10 +49,10 @@ public abstract class HttpRequest  {
      * @param requestHeader the request Header
      * @param outputWriter the writer to write the data with to the server
      */
-    protected void sendRequestHeader(String[] requestHeader, PrintWriter outputWriter){
+    protected void sendRequestHeader(List<String> requestHeader, PrintWriter outputWriter){
         //write all the messages line for line to the server
-        for(String requestString: requestHeader){
-            outputWriter.println(requestString);
+        for(String requestLine: requestHeader){
+            outputWriter.println(requestLine);
         }
         //then add empty line to finish the request
         outputWriter.println();
@@ -80,9 +85,13 @@ public abstract class HttpRequest  {
     protected final static String HTTP_VERSION = "HTTP/1.1";
     protected final static String HOST = "Host: ";
     protected final static String KEEP_CONNECTION_ALIVE = "Connection: Keep-Alive";
+    protected final static String CONTENT_LENGTH = "Content-Length: ";
+    protected final static String CONTENT_TYPE = "Content-Type: ";
+    protected final static String CONTENTT_TYPE_HTML_TXT = "text/html";
     protected final static String GET = "GET";
     protected final static String HEAD = "HEAD";
     protected final static String PUT = "PUT";
     protected final static String POST = "POST";
+    private final static String HTML_SAVEPAGE = "RequestedPageCache";
 
 }
