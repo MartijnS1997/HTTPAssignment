@@ -79,7 +79,7 @@ public class ClientCommandLine {
     private boolean anotherCommand(){
         BufferedReader reader = this.getReader();/*new BufferedReader( new InputStreamReader(this.getReadStream()));*/
         PrintStream printer = this.getPrintStream();
-
+        refreshInput();
         //send the query to the user:
         printer.println(CONTINUE_SESSION);
         try {String line;
@@ -122,6 +122,7 @@ public class ClientCommandLine {
         //first create a scanner that reads input from the command line client
         BufferedReader reader = this.getReader(); /*new BufferedReader( new InputStreamReader(System.in));*/
         PrintStream printer = this.getPrintStream();
+        refreshInput();
         //send message to the user
         printer.println(ENTER_COMMAND);
         //then retrieve the command
@@ -190,10 +191,10 @@ public class ClientCommandLine {
 
         if(client.hasSameHost(commandURL)){
             //we are already connected, no issue
-            //System.out.println("Same host");
+            System.out.println("Same host");
             return;
         }
-        //System.out.println("Another host needs to be selected");
+        System.out.println("Another host needs to be selected");
 
         //if not we connect to the new host
         //by first closing our current connection
@@ -215,12 +216,12 @@ public class ClientCommandLine {
         //first create a scanner that reads input from the command line client
         BufferedReader reader = this.getReader();/*new BufferedReader( new InputStreamReader(this.getReadStream()));*/
         PrintStream printer = this.getPrintStream();
+        refreshInput();
         //send a friendly message to the user
         printer.println(ENTER_MESSAGE_BODY);
         printer.println(MESSAGE_INSTRUCTIONS);
         //read the input, do this until the
         boolean scanning = true;
-        StringBuilder builder = new StringBuilder(BUILDER_CAPACITY);
         List<String> messageBody = new ArrayList<>();
         //scan for the body
         while(scanning){
@@ -245,6 +246,10 @@ public class ClientCommandLine {
         }
         //now build the string
         return  messageBody;
+    }
+
+    private void refreshInput(){
+        //Todo implement refresh
     }
 
     /**

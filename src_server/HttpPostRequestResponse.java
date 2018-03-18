@@ -47,10 +47,12 @@ public class HttpPostRequestResponse extends HttpTransferRequestResponse {
      */
     private void appendFile(PrintWriter writer, ServerFileSystem fileSystem, Path locationOnServer) throws ServerFileSystemException {
         ReadOnlyServerFile file = new ReadOnlyServerFile(fileSystem, locationOnServer);
-        List<String> fileLines = file.getFileContents();
+        List<String> fileLines = new ArrayList<>(file.getFileContents());
         //concatenate the message
         List<String> messageBody = this.getMessageBody();
+
         fileLines.addAll(messageBody);
+
         //write back to the server
         fileSystem.writeTextBasedFile(locationOnServer, fileLines.toArray(new String[fileLines.size()]));
         //write the response to the server
@@ -61,13 +63,15 @@ public class HttpPostRequestResponse extends HttpTransferRequestResponse {
         Path outputFilePath = Paths.get(outputFolder.toString(), locationOnServer.getFileName().toString());
         File outputFile = new File(outputFilePath.toUri());
         outputFile.getParentFile().mkdirs();
-
         try {
+            //create a new file in the specified path
             outputFile.createNewFile();
             PrintWriter fileWriter = new PrintWriter(new FileOutputStream(outputFile));
-            for(String line: messageBody){
+            for(String line: fileLines){
                 fileWriter.println(line);
             }
+            //close the writer
+            fileWriter.close();
 
         } catch (IOException e) {
             e.printStackTrace();

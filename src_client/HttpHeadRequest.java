@@ -36,27 +36,15 @@ public class HttpHeadRequest extends HttpRequest {
 
 
     private String receiveResponse(DataInputStream inputStream) throws IOException {
-        //initialize the strings
-        String response;
-        //get the input stream reader
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        String line;
-        //initialize the builder
-        StringBuilder responseBodyBuilder = new StringBuilder();
+        ClientResponseHeader header = new ClientResponseHeader();
+        header.readResponseHeader(inputStream);
+        String resultString = header.toString();
+        //check if there occurred an error
+        if(header.hasErrorCode()){
+            resultString = header.handleErrorStatusCode(inputStream);
+        }
 
-
-        while(!(line = reader.readLine()).equals("")) {
-            //append the line
-            responseBodyBuilder.append(line);
-            //also add newline feed
-            responseBodyBuilder.append("\n");
-            }
-
-
-        response = responseBodyBuilder.toString();
-        this.saveHtmlPage(response, "HeadResult");
-
-        return response ;
+        return resultString;
     }
 
 

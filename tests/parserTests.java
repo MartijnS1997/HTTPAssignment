@@ -104,4 +104,39 @@ public class parserTests {
         URL url = new URL(urlString);
         System.out.println(url.getPath().substring(1));
     }
+
+    @Test
+    public void appendLines(){
+        List<String> lines = new ArrayList<>();
+        lines.add("hey");
+        lines.add("all ok?");
+
+        List<String> appendLines = new ArrayList<>();
+        appendLines.add("yes");
+        appendLines.add("I'm fine");
+
+        lines.addAll(appendLines);
+        System.out.println("lines: " + lines);
+
+    }
+
+    @Test
+    public void characterLines(){
+        List<String> stringList = new ArrayList<>();
+        stringList.add("hey");
+        stringList.add("everything okay?");
+        stringList.add("yeeaaaaah");
+
+        StringBuilder builder = new StringBuilder();
+        for(String elem: stringList){
+            builder.append(elem);
+            builder.append("\r\n");
+        }
+        builder.deleteCharAt(builder.length() - 1);
+        System.out.println("normal string length: " + builder.length());
+        byte byteString[] = builder.toString().getBytes();
+        System.out.println("byte string length: " + byteString.length);
+
+    }
+
 }

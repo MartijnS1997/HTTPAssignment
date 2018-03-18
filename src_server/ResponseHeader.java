@@ -55,13 +55,13 @@ public class ResponseHeader {
      */
     public void writeResponseHeader(PrintWriter writer){
         List<String> headerLines = this.getHeaderLines();
-        System.out.println("header:\n" + headerLines);
+        //System.out.println("header:\n" + headerLines);
         for(String headerLine: headerLines){
             writer.println(headerLine);
         }
-        System.out.println("header received");
         //print the final newline to indicate the start of the response
         writer.println();
+        writer.flush();
     }
 
 
@@ -214,7 +214,7 @@ public class ResponseHeader {
 
 
     private final static String DATE = "Date: ";
-    private final static String CONTENT_LENGTH = "Content-length: ";
+    private final static String CONTENT_LENGTH = "Content-Length: ";
     private final static String CONTENT_TYPE = "Content-Type: ";
     private final static String CONNECTION = "Connection: ";
     private final static String MODIFIED_SINCE = "Modified-Since: ";

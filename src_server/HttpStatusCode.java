@@ -52,7 +52,6 @@ public enum HttpStatusCode {
         }
     }
 
-
     private final static String OK_STRING = "OK";
     private final static String BAD_REQUEST_STRING = "Bad Request " ;
     private final static String NOT_FOUND_STRING = "Not Found";

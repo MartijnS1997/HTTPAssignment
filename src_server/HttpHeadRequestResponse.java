@@ -1,7 +1,5 @@
-import javax.xml.ws.Response;
 import java.io.PrintWriter;
 import java.nio.file.Path;
-import java.util.List;
 
 /**
  * Created by Martijn on 11/03/2018.

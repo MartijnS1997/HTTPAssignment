@@ -68,10 +68,7 @@ public class HttpPutRequest extends HttpRequest {
         //add the content length
         List<String> contentLines = this.getMessageBody();
         //newlines were omitted while reading, add them back to the content
-        long contentChars = contentLines.size();
-        for(String line: contentLines){
-            contentChars+= line.length();
-        }
+        long contentChars = calcContentBytes(contentLines);
         //add the content length: the nb of bytes (or ascii chars)
         request.add(CONTENT_LENGTH + contentChars);
 
@@ -79,28 +76,18 @@ public class HttpPutRequest extends HttpRequest {
     }
 
     private String receiveResponse(DataInputStream inputStream) throws IOException {
-        //initialize the strings
+        //initialize the inputStream
+        ClientResponseHeader header = new ClientResponseHeader();
+        header.readResponseHeader(inputStream);
+        String result = header.toString();
 
-        String response;
-        //get the input stream reader
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        String line;
-        //initialize the builder
-        StringBuilder responseBodyBuilder = new StringBuilder();
-
-        while(!(line = reader.readLine()).equals("")) {
-            //append the line
-            responseBodyBuilder.append(line);
-            //also add newline feed
-            responseBodyBuilder.append("\n");
-            System.out.println(line);
+        if(header.hasErrorCode()){
+            header.handleErrorStatusCode(inputStream);
         }
 
+        this.saveHtmlPage(header.toString(), "PutResult");
 
-        response = responseBodyBuilder.toString();
-        this.saveHtmlPage(response, "PutResult");
-
-        return response ;
+        return header.toString() + "\n\n" ;
     }
 
 

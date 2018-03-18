@@ -1,8 +1,6 @@
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by Martijn on 11/03/2018.
@@ -24,6 +22,9 @@ public class HttpPutRequestResponse extends HttpRequestResponse {
         writer.flush();
     }
 
+    /**
+     * Write the file to the server file system and to the request output directory
+     */
     private void writeFile(){
         ServerFileSystem fileSystem = this.getFileSystem();
         Path serverPath = this.getServerPath();

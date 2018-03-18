@@ -43,22 +43,32 @@ public class HttpGetRequest extends HttpRequest {
     private String receiveResponse(DataInputStream inputStream){
         //initialize the strings
 
-        String responseHeader = null;
         String responseBody = null;
+        ClientResponseHeader responseHeader = null;
         //get the input stream reader
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         //read from the stream while concatenating
-        try {
-            responseHeader = getResponseHeader(reader);
-            responseBody = getResponseMessageBody(reader);
-        } catch (IOException e) {
-            //idk what happened better print the error
-            e.printStackTrace();
+
+        responseHeader = new ClientResponseHeader();
+        //responseHeader.readForHeader(reader);
+        responseHeader.readResponseHeader(inputStream);
+        //check for errors
+        if(responseHeader.hasErrorCode()){
+            return responseHeader.handleErrorStatusCode(inputStream);
         }
-
-
+        long messageContentLength = responseHeader.getContentLength();
+        responseBody = HttpRequest.readResponseBodyBytes(inputStream, messageContentLength);//getResponseMessageBody(reader, messageContentLength);
 
         //Retrieve the embedded images from a site and save them to "imageCache"
+        getEmbeddedImages(responseBody);
+
+        return  responseHeader.toString() + "\n\n" + responseBody;
+    }
+
+    /**
+     * Retrieves all the embedded images from the response
+     * @param responseBody the response from the server (the html page to download from)
+     */
+    private void getEmbeddedImages(String responseBody) {
         Elements images = ParseHTML.scanForEmbeddedImages(responseBody);
 
         ArrayList imageList = ParseHTML.getImageLinkList(images);
@@ -71,8 +81,6 @@ public class HttpGetRequest extends HttpRequest {
             e.printStackTrace();
         }
         replaceHtmlImageSources(responseBody);
-
-        return responseHeader + "\n" + responseBody;
     }
 
     /**
@@ -104,48 +112,85 @@ public class HttpGetRequest extends HttpRequest {
     }
 
 
-    private String getResponseMessageBody(BufferedReader reader) throws IOException {
-        //initialize the builder
-        StringBuilder responseBodyBuilder = new StringBuilder(RESPONSE_SIZE);
-        //and the line to be read
-        String line;
-        //if we got the html tail, close the reader
-        boolean gotHtmlTail = false;
-
-        while(!gotHtmlTail) {
-            line = reader.readLine();
-            //append the line
-            responseBodyBuilder.append(line);
-            //also add newline feed
-            responseBodyBuilder.append("\n");
-            //check if we have received the html closing
-            if((line.toLowerCase()).contains("</html>")||(line == null)){
-                gotHtmlTail = true;
-            }
-        }
-
-        return responseBodyBuilder.toString();
-    }
+//    /**
+//     * Getter for the response body of the message, extracts the message body from the provided stream
+//     * @param reader the reader used to read from the stream
+//     * @return a list of strings containing the message body, each entry in the list represents
+//     * a line of the message body
+//     * @throws IOException
+//     */
+//    private String getResponseMessageBody(BufferedReader reader, long contentLength) throws IOException {
+//        //initialize the builder
+//        StringBuilder responseBodyBuilder = new StringBuilder(RESPONSE_SIZE);
+//        //and the line to be read
+//        String line;
+//        //if we got the html tail, close the reader
+//        boolean gotMessageTail = false;
+//        System.out.println("contentLength: " + contentLength);
+//        int nbLines = 0;
+//        //the message size is the combined length of all the strings
+//        //and the an extra for the string termination character
+//        while(!gotMessageTail) {
+//            line = reader.readLine();
+//            //check if we have ended the line
+//            if((line == null)){
+//                gotMessageTail = true;
+//            }
+//            //count the lines
+//            nbLines ++;
+//
+//            //System.out.println("line received: " +  line);
+//            //append the line
+//            responseBodyBuilder.append(line);
+//            //also add newline feed
+//            responseBodyBuilder.append("\n");
+//            //check if the length of the builder equals the content length
+//            //System.out.println("total response length: " + (responseBodyBuilder.length() + nbLines));
+//            if(responseBodyBuilder.length() + nbLines >= contentLength){
+//                //if so break the loop
+//                gotMessageTail = true;
+//            }
+//        }
+//
+//        return responseBodyBuilder.toString();
+//    }
 
     /**
      * Reads the response header from the reader and returns a string containing the response
      * @param reader the reader to read the input from
-     * @return the string containing the message header from the response
+     * @return the list of strings containing the message header from the response (each string equals a line)
      * @throws IOException thrown if io went wrong
      */
-    private String getResponseHeader(BufferedReader reader) throws IOException {
+    private List<String> getResponseHeader(BufferedReader reader) throws IOException {
         //initiate the string builder
-        StringBuilder responseHeaderBuilder = new StringBuilder();
+        List<String> responseHeaderLines = new ArrayList<>();
         String line;
         //while we do not read a blank line we are building the header
         while(!(line = reader.readLine()).equals("")){
             //add the line
-            responseHeaderBuilder.append(line);
-            //also add the newline feed
-            responseHeaderBuilder.append("\n");
+            responseHeaderLines.add(line);
         }
 
-        return responseHeaderBuilder.toString();
+        return responseHeaderLines;
+    }
+
+    /**
+     * extracts the content length from the header
+     * @param responseHeader the response header to analyze
+     * @return the content length value if present in the header, if not, return zero
+     */
+    private static long getContentLengthFromHeader(List<String> responseHeader){
+        for(String line: responseHeader){
+            //check if the header line is the content length
+            if(line.startsWith(CONTENT_LENGTH)){
+                //split the header field from the value
+                String lineElems[] = line.split(" ");
+                //extract the value (second part)
+                return Long.parseLong(lineElems[1]);
+            }
+        }
+
+        return 0L;
     }
 
     /**

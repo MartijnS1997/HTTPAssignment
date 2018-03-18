@@ -1,4 +1,3 @@
-import javax.sound.sampled.Line;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Path;
@@ -241,7 +240,7 @@ public class ServerConnection implements Runnable {
                 //add lines to the message accumulator
                 messageBodyList.add(line);
                 //get the size of the message
-                toReceive-= (line.length() + 1); // the string + a CRLF
+                toReceive-= (line.length() + 2); // the string + a CRLF
             }
         } catch (IOException e) {
             //something happened where we have no control over

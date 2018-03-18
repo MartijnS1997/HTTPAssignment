@@ -58,7 +58,8 @@ public class Server {
                 Socket connectionSocket = serverSocket.accept();
                 //if a new connection is requested create a new server connection object
                 ServerConnection connection = new ServerConnection(connectionSocket, this);
-                System.out.println("created connection");
+
+                System.out.println("created connection: " + connection.toString());
                 //submit the new connection to the thread pool
                 threadPool.submit(connection);
             } catch (IOException e) {

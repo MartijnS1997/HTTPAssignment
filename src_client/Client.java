@@ -20,7 +20,7 @@ public class Client {
 
     //Todo reconfigure such that it can be initialized with ClientCommand object
     public void initConnection(ClientCommand command){
-
+        System.out.println("Issuing new connection");
         URL url = command.getUrl();
         int TCPPort = command.getPort();
 

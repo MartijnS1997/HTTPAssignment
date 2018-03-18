@@ -25,13 +25,15 @@ public class ReadOnlyServerFile {
         Path path = this.getLocationOnServer();
         ServerFileSystem fileSystem = this.getFileSystem();
 
-        //check the size of the file
+
         long fileSize = fileSystem.getFileSize(path);
         this.fileSize = fileSize;
 
         //now read the file
         String file[] = fileSystem.readTextBasedFileLines(path);
         List<String> fileLines = Arrays.asList(file);
+
+
 
         this.fileContents = fileLines;
     }
@@ -44,6 +46,7 @@ public class ReadOnlyServerFile {
 
         List<String> fileLines = this.getFileContents();
         for(String line: fileLines){
+            //System.out.println("line: " + line);
             writer.println(line);
         }
     }

@@ -1,7 +1,6 @@
 import java.io.*;
 import java.nio.file.Path;
 import java.sql.Timestamp;
-import java.util.List;
 
 /**
  * Created by Martijn on 11/03/2018.
@@ -79,6 +78,8 @@ public class HttpGetRequestResponse extends HttpTransferRequestResponse {
             messageBodyFile.writeFile(writer);
             //flush the line
             writer.flush();
+
+            //System.out.println("messageWritten");
 
         } catch (ServerFileSystemException | ServerException e) {
             sendError404Message(writer);
