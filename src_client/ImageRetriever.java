@@ -16,14 +16,14 @@ public class ImageRetriever {
     public static void retrieveImages(List<String> imageList, String currentHost) throws IOException {
 
         Path path;
-        String workingDir = System.getProperty("user.dir");
+        String workingDir =System.getProperty("user.dir");
 
         List<String> internalImages = getInternalLinkList(imageList);
         List<String> externalImages = getExternalLinkList(imageList);
 
 
         downloadInternalImages(currentHost, workingDir, internalImages);
-        System.out.println("finished downloading internal files");
+        System.out.println("finished downloading internal files\n");
         downloadExternalImages(workingDir, externalImages);
 
 
@@ -53,7 +53,7 @@ public class ImageRetriever {
             System.out.println("Request sent");
             DataInputStream inputStream
                     = new DataInputStream(socket.getInputStream());
-            Path downloadPath = Paths.get(workingDir, "imageCache", imageUrl.getPath());
+            Path downloadPath = Paths.get(workingDir,"RequestedPageCache", "imageCache", imageUrl.getPath());
 
             System.out.println("Start download");
             File downloadedFile = downLoadImage(inputStream, downloadPath);
@@ -121,7 +121,7 @@ public class ImageRetriever {
             DataInputStream dataInputStream
                     = new DataInputStream(inputStream);
             //get the path and create a file based on that
-            Path downloadPath = Paths.get(workingDir,"imageCache", imageURI);
+            Path downloadPath = Paths.get(workingDir,"RequestedPageCache","imageCache", imageURI);
             //created file based on the uri
             System.out.println("downloading file");
             File downloadFile = downLoadImage(dataInputStream, downloadPath);
@@ -157,7 +157,7 @@ public class ImageRetriever {
 
     private static void removeHeader(String workingDir, String imageURI, File downloadFile) throws IOException {
         //create the cleaned files path
-        Path cleanFilePath = Paths.get(workingDir ,"imageCache", "cleanedFiles" ,imageURI);
+        Path cleanFilePath = Paths.get(workingDir ,"RequestedPageCache","imageCache", "cleanedFiles" ,imageURI);
 
         //Remove HTTP Header from file to make it readable
         InputStream fileStream = com.google.common.io.Files.asByteSource(downloadFile).openStream();
