@@ -85,13 +85,13 @@ public class Client {
      */
     public void closeConnection(){
         Socket socket = this.getConnectionSocket();
-        PrintWriter writer = this.getPrintWriter();
+        OutputStream outputStream = this.getOutputStream();
         DataInputStream inputStream = this.getInputStream();
 
         //System.out.println("Closing down connection");
         try {
             socket.close();
-            writer.close();
+            outputStream.close();
             inputStream.close();
         } catch (IOException e) {
             // the connection could not be closed for unknown reasons, later report back to the command client

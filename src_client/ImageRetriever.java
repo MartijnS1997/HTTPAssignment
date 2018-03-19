@@ -24,51 +24,76 @@ public class ImageRetriever {
 
 
         downloadInternalImages(currentHost, workingDir, internalImages,parentInputStream, parentOutputStream);
-        System.out.println("finished downloading internal files\n");
+        //System.out.println("finished downloading internal files\n");
         downloadExternalImages(workingDir, externalImages);
 
 
     }
 
     private static void downloadExternalImages(String workingDir, List<String> externalImages) throws IOException {
-        Path path;
+
+        if(externalImages.size() == 0){
+            return;
+        }
+
         //sort on host name:
         //the same host names will come in front
         //TODO check if the same hostname is still active (via URL.gethost)
         Collections.sort(externalImages);
-        for (String imageURI: externalImages){
-            System.out.println("current image URL: " + imageURI);
-            URL imageUrl = new URL(imageURI);
-            String externalHost = (imageUrl.getHost());
-            Socket socket = new Socket(externalHost, 80);
+        //initialize previous host
+        URL prevUrl = new URL(externalImages.get(0));
+        //initialize the sockets
+        String externalHost = (prevUrl.getHost());
+        Socket socket = new Socket(externalHost, TCP_PORT);
 
-            System.out.println("sending request");
-            PrintWriter outStream
-                    = new PrintWriter(socket.getOutputStream());
+        PrintWriter outStream
+                = new PrintWriter(socket.getOutputStream());
+        DataInputStream inputStream
+                = new DataInputStream(socket.getInputStream());
+
+        for (String imageURI: externalImages){
+            URL currentUrl = new URL(imageURI);
+            //check if we have the same host
+            if(!currentUrl.getHost().equals(prevUrl.getHost())){
+                //System.out.println("Switching hosts");
+                //if not change the prev url to check next time
+                prevUrl = new URL(prevUrl.toString());
+                socket = new Socket(externalHost, TCP_PORT);
+                outStream = new PrintWriter(socket.getOutputStream());
+                inputStream = new DataInputStream(socket.getInputStream());
+                externalHost = currentUrl.getHost();
+            }
+            //System.out.println("current image URL: " + imageURI);
+
+            //System.out.println("sending request");
 
             outStream.println("GET /" +imageURI.split(externalHost +"/")[1] +" HTTP/1.1");
             outStream.println("Host: " + externalHost);
             outStream.println();
             outStream.flush();
 
-            System.out.println("Request sent");
-            DataInputStream inputStream
-                    = new DataInputStream(socket.getInputStream());
-            Path downloadPath = Paths.get(workingDir,"RequestedPageCache", "imageCache", imageUrl.getPath());
+            //System.out.println("Request sent");
+
+            Path downloadPath = Paths.get(workingDir,"RequestedPageCache", "imageCache", currentUrl.getPath());
 
             ClientResponseHeader responseHeader = new ClientResponseHeader();
-            responseHeader.readResponseHeader(new DataInputStream(inputStream));
+            responseHeader.readResponseHeader(inputStream);
             long downloadSize = responseHeader.getContentLength();
 
-            System.out.println("Start download");
+            if(responseHeader.hasErrorCode()){
+                System.out.println("could not download image: " + imageURI);
+                continue;
+            }
+
+            //System.out.println("Start download");
             File downloadedFile = downLoadImage(inputStream, downloadPath, downloadSize);
-            System.out.println("Download finished");
-            System.out.println();
+            //System.out.println("Download finished");
+            //System.out.println();
 
             inputStream.close();
             outStream.close();
             socket.close();
-            String fileNameUri = imageUrl.getPath();
+            String fileNameUri = currentUrl.getPath();
         }
     }
 
@@ -104,17 +129,17 @@ public class ImageRetriever {
             long downloadSize = responseHeader.getContentLength();
             System.out.println(responseHeader.toString());
 
-            System.out.println("Request Sent");
+            //System.out.println("Request Sent");
             //create new data input stream
             DataInputStream dataInputStream
                     = new DataInputStream(parentInputStream);
             //get the path and create a file based on that
             Path downloadPath = Paths.get(workingDir,"RequestedPageCache","imageCache", imageURI);
             //created file based on the uri
-            System.out.println("downloading file");
+            //System.out.println("downloading file");
             File downloadFile = downLoadImage(dataInputStream, downloadPath, downloadSize);
-            System.out.println("download finished");
-            System.out.println();
+            //System.out.println("download finished");
+            //System.out.println();
 
 
         }
@@ -218,10 +243,10 @@ public class ImageRetriever {
         headerLines.add("Host: " + currentHost);
         headerLines.add("Connection: keep-alive");
 
-        System.out.println("Querying image: " + imageURI);
-        System.out.println("GET /" + imageURI +" HTTP/1.1");
-        System.out.println("Host: " + currentHost);
-        System.out.println("Connection: keep-alive");
+//        System.out.println("Querying image: " + imageURI);
+//        System.out.println("GET /" + imageURI +" HTTP/1.1");
+//        System.out.println("Host: " + currentHost);
+//        System.out.println("Connection: keep-alive");
 
 
         HttpRequest.sendRequestHeader(headerLines, outputStream);
@@ -250,4 +275,6 @@ public class ImageRetriever {
 
         return result;
     }
+
+    private final static int TCP_PORT = 80;
 }

@@ -43,7 +43,7 @@ public class HttpHeadRequest extends HttpRequest {
         if(header.hasErrorCode()){
             resultString = header.handleErrorStatusCode(inputStream);
         }
-
+        resultString += "\n";
         return resultString;
     }
 

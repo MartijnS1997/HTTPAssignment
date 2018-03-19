@@ -106,7 +106,7 @@ public class imageRetrieverTest {
             dos.flush();
         }
         dos.close();
-        System.out.println("image transfer done");
+        //System.out.println("image transfer done");
 
         socket.close();
     }

@@ -25,7 +25,7 @@ public class HttpPutRequest extends HttpRequest {
         //send the newly created header
         sendRequestHeader(requestHeader, outputStream);
 
-        System.out.println("Sending message body: ");
+        //System.out.println("Sending message body: ");
 
         sendMessageBody(outputStream, messageBody);
         outputStream.flush();
@@ -35,7 +35,7 @@ public class HttpPutRequest extends HttpRequest {
 //        }
 //        outputWriter.flush();
 
-        System.out.println("Message sent");
+        //System.out.println("Message sent");
 
         //read the input from the stream
         try {
