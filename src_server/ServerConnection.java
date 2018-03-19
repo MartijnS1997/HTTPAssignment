@@ -44,7 +44,6 @@ public class ServerConnection implements Runnable {
                     break;
                 }
             } catch (Exception e) {
-                e.printStackTrace();
                 break;
             }
         }
@@ -74,11 +73,11 @@ public class ServerConnection implements Runnable {
 
     private void terminateConnection(){
         PrintWriter writer = this.getPrintWriter();
-        BufferedReader reader = this.getReader();
+        DataInputStream inputStream = this.getInputStream();
         Socket socket = this.getConnectionSocket();
         try {
             writer.close();
-            reader.close();
+            inputStream.close();
             socket.close();
         }catch(IOException e){
             //do nothing
@@ -100,7 +99,7 @@ public class ServerConnection implements Runnable {
         try {
             requestHeaderLines = readRequestHeader();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ServerException(HttpStatusCode.TIMEOUT);
         }
         System.out.println("The request: " + requestHeaderLines[0]);
         HttpRequestLine requestLine = HttpRequestParser.parseRequestLine(requestHeaderLines[0]);
@@ -138,6 +137,7 @@ public class ServerConnection implements Runnable {
     /**
      * Reads the request line from an http request
      */
+    @Deprecated
     private String readRequestLine(){
 
         BufferedReader reader = this.getReader();
@@ -158,7 +158,7 @@ public class ServerConnection implements Runnable {
                     //check if the time has exceeded the maximum allowed time
                     long timePassed = System.currentTimeMillis() - startTimeMillis;
                     //divide by 1000 to get seconds
-                    if(timePassed/1000f > TIMEOUT_SECONDS){
+                    if(timePassed/6000f > TIMEOUT_SECONDS){
                         throw new ServerException(HttpStatusCode.TIMEOUT);
                     }
                 }else{
@@ -240,29 +240,6 @@ public class ServerConnection implements Runnable {
      * @return an array of strings where each entry equals one line from the request
      */
     private String[] readMessageBody(HttpRequestHeader requestHeader){
-//        //todo implement probably needs different implementation for post and put (put needs to be an html page and end with null or </html>
-//        //first get the reader
-//        BufferedReader reader = this.getReader();
-//        //initialize the line && the accumulator
-//        String line;
-//        List<String> messageBodyList = new ArrayList<>();
-//        //then start to read until null
-//        try {
-//            long toReceive = requestHeader.getContentLength();
-//            //read until all received or connection closed
-//            while(toReceive > 0&&((line = reader.readLine()) != null)){
-//                //add lines to the message accumulator
-//                messageBodyList.add(line);
-//                //get the size of the message
-//                toReceive-= (line.length() + 2); // the string + a CRLF
-//            }
-//        } catch (IOException e) {
-//            //something happened where we have no control over
-//            e.printStackTrace();
-//        }
-//        //after all the lines are read convert to an array of strings
-//        int messageLength = messageBodyList.size();
-//        return messageBodyList.toArray(new String[messageLength]);
         //get the content length:
         long bytesToRead = requestHeader.getContentLength();
         //create a buffer:

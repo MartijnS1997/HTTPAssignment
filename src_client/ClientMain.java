@@ -3,7 +3,7 @@ import java.util.Arrays;
 /**
  * Created by Martijn on 9/03/2018.
  */
-public class Main {
+public class ClientMain {
 
     public static void main(String args[]){
         //System.out.println(Arrays.toString(args));
