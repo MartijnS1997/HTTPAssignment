@@ -12,27 +12,23 @@ public class HttpPostRequest extends HttpRequest {
 
     public HttpPostRequest(URL url, List<String> messageBody) {
         super(url);
-        this.messageBody = messageBody;
+        //encode the body contents to ascii
+        byte byteMessageBody[] = convertLinesToByteArray(messageBody);
+        this.messageBody = byteMessageBody;
     }
 
     @Override
-    public String execute(PrintWriter outputWriter, DataInputStream inputReader) throws IOException {
-        URL url = this.getUrl();
-        String host = url.getHost();
-        String path = url.getPath();
-        List<String> requestMessage = buildPostRequest(host, path);
+    public String execute(DataOutputStream outputStream, DataInputStream inputReader) throws IOException {
+        List<String> requestMessage = buildRequestHeader();
 
         //send the newly created message header
-        sendRequestHeader(requestMessage, outputWriter);
+        sendRequestHeader(requestMessage, outputStream);
 
         //get the message body
-        List<String> messageBody = this.getMessageBody();
+        byte messageBody[] = this.getMessageBody();
 
-        //send the message body
-        for(String messageLine: messageBody){
-            outputWriter.println(messageLine);
-        }
-        outputWriter.flush();
+//        send the message body
+        sendMessageBody(outputStream, messageBody);
 
         //read the input from the stream
         try {
@@ -44,7 +40,9 @@ public class HttpPostRequest extends HttpRequest {
 
     }
 
-    private List<String> buildPostRequest(String host, String path) {
+    private List<String> buildRequestHeader() {
+        URL url = this.getUrl();
+        String path = url.getPath();
         if(path.equals("")){
             path = "/";
         }
@@ -53,12 +51,12 @@ public class HttpPostRequest extends HttpRequest {
         //generate the first line
         request.add(POST+ " " + path + " " + HTTP_VERSION);
         //also add the host
-        request.add(HOST + host);
+        request.add(HOST + url.getHost());
         request.add(CONTENT_TYPE + CONTENTT_TYPE_HTML_TXT);
         //add the content length
-        List<String> contentLines = this.getMessageBody();
         //newlines were omitted while reading, add them back to the content
-        long contentChars = calcContentBytes(contentLines);
+        long contentChars = this.getMessageBody().length;
+
         request.add(CONTENT_LENGTH + contentChars);
 
 
@@ -85,11 +83,11 @@ public class HttpPostRequest extends HttpRequest {
      * Get the list of strings containing the message body
      * @return
      */
-    public List<String> getMessageBody() {
+    public byte[] getMessageBody() {
         return messageBody;
     }
 
-    private List<String> messageBody;
+    private byte[] messageBody;
 
 
 }

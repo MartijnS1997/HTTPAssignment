@@ -12,28 +12,28 @@ public class HttpPutRequest extends HttpRequest {
 
     public HttpPutRequest(URL url, List<String> messageBody) {
         super(url);
-        this.messageBody = messageBody;
+        byte[] messageBodyBytes = convertLinesToByteArray(messageBody);
+        this.messageBody = messageBodyBytes;
     }
 
     @Override
-    public String execute(PrintWriter outputWriter, DataInputStream inputReader) throws IOException {
-        URL url = this.getUrl();
-        String host = url.getHost();
-        String path = url.getPath();
-        List<String> messageBody = this.getMessageBody();
+    public String execute(DataOutputStream outputStream, DataInputStream inputReader) throws IOException {
+        byte[] messageBody = this.getMessageBody();
         //get the header
-        List<String> requestHeader = buildPutRequestHeader(host, path);
+        List<String> requestHeader = buildPutRequestHeader();
 
         //send the newly created header
-        sendRequestHeader(requestHeader, outputWriter);
+        sendRequestHeader(requestHeader, outputStream);
 
         System.out.println("Sending message body: ");
 
+        sendMessageBody(outputStream, messageBody);
+        outputStream.flush();
         //send the message
-        for(String messageLine: messageBody){
-            outputWriter.println(messageLine);
-        }
-        outputWriter.flush();
+//        for(String messageLine: messageBody){
+//            outputWriter.println(messageLine);
+//        }
+//        outputWriter.flush();
 
         System.out.println("Message sent");
 
@@ -49,11 +49,11 @@ public class HttpPutRequest extends HttpRequest {
 
     /**
      * Creates a header for a put request
-     * @param host the host to send to
-     * @param path the path where the request will be placed
      * @return A list of strings where each string is a line to send
      */
-    private List<String> buildPutRequestHeader(String host, String path) {
+    private List<String> buildPutRequestHeader() {
+        URL url = this.getUrl();
+        String path = url.getPath();
         if(path.equals("")){
             path = "/";
         }
@@ -62,13 +62,13 @@ public class HttpPutRequest extends HttpRequest {
         //generate the first line
         request.add(PUT+ " " + path + " " + HTTP_VERSION);
         //also add the host
-        request.add(HOST + host);
+        request.add(HOST + url.getHost());
         //add the content type
         request.add(CONTENT_TYPE + CONTENTT_TYPE_HTML_TXT);
         //add the content length
-        List<String> contentLines = this.getMessageBody();
+        byte[] contentBytes = this.getMessageBody();
         //newlines were omitted while reading, add them back to the content
-        long contentChars = calcContentBytes(contentLines);
+        long contentChars = contentBytes.length;
         //add the content length: the nb of bytes (or ascii chars)
         request.add(CONTENT_LENGTH + contentChars);
 
@@ -91,10 +91,10 @@ public class HttpPutRequest extends HttpRequest {
     }
 
 
-    public List<String> getMessageBody() {
+    public byte[] getMessageBody() {
         return messageBody;
     }
 
-    private List<String> messageBody;
+    private byte[] messageBody;
 
 }

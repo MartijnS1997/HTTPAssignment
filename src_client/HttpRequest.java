@@ -41,6 +41,7 @@ public abstract class HttpRequest  {
      * @param contentLines the lines to calculate the file size from
      * @return the total amount of bytes the transmission will take
      */
+    @Deprecated
     protected static long calcContentBytes(List<String> contentLines) {
         long contentChars = contentLines.size()*2 - 2; // each line contains 1 linefeed and one carriage return (minus final line)
         for(String line: contentLines){
@@ -52,10 +53,10 @@ public abstract class HttpRequest  {
 
     /**
      * Executes the request with the given input writer and output reader
-     * @param outputWriter the writer so write output to the server (eg our request)
+     * @param outputStream the stream to output with
      * @param inputReader reader for the input, we read incoming messages from this reader
      */
-    public abstract String execute(PrintWriter outputWriter, DataInputStream inputReader) throws IOException;
+    public abstract String execute(DataOutputStream outputStream, DataInputStream inputReader) throws IOException;
 
     /**
      * Saves the file locally to the specified location
@@ -78,16 +79,27 @@ public abstract class HttpRequest  {
      * Sends the request header to the server additional data like message body needs to be sent
      * by sendRequestMessageBody
      * @param requestHeader the request Header
-     * @param outputWriter the writer to write the data with to the server
+     * @param outputStream the writer to write the data with to the server
      */
-    protected void sendRequestHeader(List<String> requestHeader, PrintWriter outputWriter){
+    protected static void sendRequestHeader(List<String> requestHeader, DataOutputStream outputStream){
         //write all the messages line for line to the server
-        for(String requestLine: requestHeader){
-            outputWriter.println(requestLine);
+        //first convert it to bytes, and add an crlf after the header
+        requestHeader.add("");
+        byte requestBytes[] = convertLinesToByteArray(requestHeader);
+        //send the byte array
+        try {
+            outputStream.write(requestBytes, 0, requestBytes.length);
+        } catch (IOException e) {
+            //something went wrong
+            e.printStackTrace();
         }
-        //then add empty line to finish the request
-        outputWriter.println();
-        outputWriter.flush();
+
+//        for(String requestLine: requestHeader){
+//            outputWriter.println(requestLine);
+//        }
+//        //then add empty line to finish the request
+//        outputWriter.println();
+//        outputWriter.flush();
 
         //we are finished
     }
@@ -175,7 +187,7 @@ public abstract class HttpRequest  {
         return "";
     }
 
-    protected byte[] convertLinesToByteArray(List<String> lines){
+    protected static byte[] convertLinesToByteArray(List<String> lines){
         //first generate the standard format to send the string, each line ends with /crlf
         StringBuilder builder = new StringBuilder();
         for(String line: lines){
@@ -190,6 +202,19 @@ public abstract class HttpRequest  {
 
         //convert the string to an array of bytes
         return lineString.getBytes(StandardCharsets.US_ASCII);
+    }
+
+    /**
+     * Sends the message body specified in the message content field over the output stream
+     * @param outputStream the output stream to send the message over
+     * @param messageContent the content to send encoded in bytes
+     */
+    protected static void sendMessageBody(DataOutputStream outputStream, byte[] messageContent){
+        try {
+            outputStream.write(messageContent, 0, messageContent.length);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

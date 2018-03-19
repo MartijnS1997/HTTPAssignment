@@ -35,12 +35,14 @@ public class Client {
         //now create the socket and the other connection parts
         try {
             Socket socket = new Socket(ipAddress, TCPPort);
-            PrintWriter printWriter = new PrintWriter(socket.getOutputStream());
+            //PrintWriter printWriter = new PrintWriter(socket.getOutputStream());
+            DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
             DataInputStream inputStream = new DataInputStream(socket.getInputStream());
 
             //now set them all
             setConnectionSocket(socket);
-            setPrintWriter(printWriter);
+            //setPrintWriter(printWriter);
+            setOutputStream(outputStream);
             setInputStream(inputStream);
         } catch (IOException e) {
             //something went wrong, notify the command line
@@ -120,15 +122,32 @@ public class Client {
      */
     public String issueRequest(HttpRequest request) throws IOException {
         DataInputStream inputStream = this.getInputStream();
-        PrintWriter printWriter = this.getPrintWriter();
-        return request.execute(printWriter, inputStream);
+        //PrintWriter printWriter = this.getPrintWriter();
+        DataOutputStream outputStream = this.getOutputStream();
+        return request.execute(outputStream, inputStream);
     }
 
+    /**
+     * Getter for the output stream of the client, used for server communication
+     * @return
+     */
+    private DataOutputStream getOutputStream() {
+        return outputStream;
+    }
+
+    /**
+     * Setter for the output stream used for server communication
+     * @param outputStream the output stream to write to
+     */
+    private void setOutputStream(DataOutputStream outputStream) {
+        this.outputStream = outputStream;
+    }
 
     /**
      * Getter for the writer used for communication with the server (is able to print line for line)
      * @return the printer used in communication
      */
+    @Deprecated
     private PrintWriter getPrintWriter() {
         return printWriter;
     }
@@ -137,6 +156,7 @@ public class Client {
      * Setter for the printer used for server communication
      * @param printWriter the print writer to be used by the client
      */
+    @Deprecated
     private void setPrintWriter(PrintWriter printWriter) {
         this.printWriter = printWriter;
     }
@@ -189,6 +209,11 @@ public class Client {
     private void setCurrentUrl(URL currentUrl) {
         this.currentUrl = currentUrl;
     }
+
+    /**
+     * The output stream to write to the servers
+     */
+    private DataOutputStream outputStream;
 
     /**
      * The print writer used in communication with the web page

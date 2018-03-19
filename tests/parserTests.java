@@ -132,10 +132,17 @@ public class parserTests {
             builder.append(elem);
             builder.append("\r\n");
         }
-        builder.deleteCharAt(builder.length() - 1);
-        System.out.println("normal string length: " + builder.length());
-        byte byteString[] = builder.toString().getBytes();
-        System.out.println("byte string length: " + byteString.length);
+        builder.append("\r\n");
+        builder.append("\r\n");
+        System.out.println(builder.toString());
+//        builder.deleteCharAt(builder.length() - 1);
+//        System.out.println("normal string length: " + builder.length());
+//        byte byteString[] = builder.toString().getBytes();
+//        System.out.println("byte string length: " + byteString.length);
+        String[] lines = builder.toString().split("\n");
+        System.out.println(Arrays.toString(lines));
+        String[] cleaned = Arrays.stream(lines).filter(s -> !s.matches("\\R")&&!s.isEmpty()).collect(Collectors.toList()).toArray(new String[0]);
+        System.out.println(Arrays.toString(cleaned));
 
     }
 

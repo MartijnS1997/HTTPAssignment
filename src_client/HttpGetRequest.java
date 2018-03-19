@@ -21,7 +21,7 @@ public class HttpGetRequest extends HttpRequest {
     }
 
     @Override
-    public String execute(PrintWriter outputWriter, DataInputStream inputStream) {
+    public String execute(DataOutputStream outputStream, DataInputStream inputStream) {
         //first the host and the path from the given URl:
         URL url = this.getUrl();
         String host = url.getHost();
@@ -29,7 +29,7 @@ public class HttpGetRequest extends HttpRequest {
         List<String> requestMessage = buildGetRequest(host, path);
 
         //send the newly created message
-        sendRequestHeader(requestMessage, outputWriter);
+        sendRequestHeader(requestMessage, outputStream);
 
         //read the input from the stream
         return receiveResponse(inputStream);

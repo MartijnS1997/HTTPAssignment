@@ -15,14 +15,14 @@ public class HttpHeadRequest extends HttpRequest {
     }
 
     @Override
-    public String execute(PrintWriter outputWriter, DataInputStream inputReader) throws IOException {
+    public String execute(DataOutputStream outputStream, DataInputStream inputReader) throws IOException {
         URL url = this.getUrl();
         String host = url.getHost();
         String path = url.getPath();
         List<String> requestMessage = buildHeadRequest(host, path);
 
         //send the newly created message
-        sendRequestHeader(requestMessage, outputWriter);
+        sendRequestHeader(requestMessage, outputStream);
 
         //read the input from the stream
         try {

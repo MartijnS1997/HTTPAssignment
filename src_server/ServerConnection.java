@@ -1,10 +1,12 @@
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by Martijn on 10/03/2018.
@@ -60,7 +62,7 @@ public class ServerConnection implements Runnable {
 
         try {
             InputStream inputStream = socket.getInputStream();
-            this.reader = new BufferedReader(new InputStreamReader(inputStream));
+            this.inputStream = new DataInputStream(inputStream);
 
             OutputStream outputStream = socket.getOutputStream();
             this.printWriter = new PrintWriter(outputStream);
@@ -93,12 +95,18 @@ public class ServerConnection implements Runnable {
         //1. read the request line
         //2. read the body (host necessary)
         //3. (optional) retrieve the extra body check this by using the parsed input
-        String requestLineString = readRequestLine();
-        System.out.println("The request: " + requestLineString);
-        HttpRequestLine requestLine = HttpRequestParser.parseRequestLine(requestLineString);
-        String[] requestHeaderString = readRequestHeader();
-        System.out.println("Header: " + Arrays.toString(requestHeaderString));
-        HttpRequestHeader requestHeader = HttpRequestParser.parseRequestHeader(requestHeaderString);
+        //String requestLineString = readRequestLine();
+        String[] requestHeaderLines = new String[0];
+        try {
+            requestHeaderLines = readRequestHeader();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("The request: " + requestHeaderLines[0]);
+        HttpRequestLine requestLine = HttpRequestParser.parseRequestLine(requestHeaderLines[0]);
+
+        System.out.println("Header: " + Arrays.toString(requestHeaderLines));
+        HttpRequestHeader requestHeader = HttpRequestParser.parseRequestHeader(requestHeaderLines);
         //check if the message has a header
 
         if(!requestHeader.hasHostHeader()){
@@ -170,25 +178,31 @@ public class ServerConnection implements Runnable {
      * Reads the input stream for the request header
      * @return an array of strings where each entry is a single line of the header
      */
-    private String[] readRequestHeader(){
-        //read the input until we reach a blank line
-        BufferedReader reader = this.getReader();
-        String line;
-        List<String> headerLines = new ArrayList<>();
-        try {
-            //read all the lines while adding the lines to the string
-            while(!(line = reader.readLine()).equals("")){
-                headerLines.add(line);
+    private String[] readRequestHeader() throws IOException {
+        DataInputStream inputStream = this.getInputStream();
+        //the character used to buffer
+        int charRead;
+        //the builder where the header is built
+        StringBuilder sb = new StringBuilder();
+        while (true) {
+            sb.append((char) (charRead = inputStream.read()));
+            if ((char) charRead == '\r') {            // if we've got a '\r'
+                sb.append((char) inputStream.read()); // then write '\n'
+                charRead = inputStream.read();        // read the next char;
+                if (charRead == '\r') {                  // if it's another '\r'
+                    sb.append((char) inputStream.read());// write the '\n'
+                    break;
+                } else {
+                    sb.append((char) charRead);
+                }
             }
-        } catch (IOException e) {
-            //something went wrong during the transfer print stack
-            e.printStackTrace();
         }
 
-        int size = headerLines.size();
-
         //return the received lines
-        return headerLines.toArray(new String[size]);
+        String[] headersArray = sb.toString().split("\r\n");
+        //clean the empty lines
+        return headersArray;
+//        return Arrays.stream(headersArray).filter(s -> !s.matches("\\R")).collect(Collectors.toList()).toArray(new String[0]);
     }
 
     static String[] readFileAtRelPath(Path relPath){
@@ -226,29 +240,75 @@ public class ServerConnection implements Runnable {
      * @return an array of strings where each entry equals one line from the request
      */
     private String[] readMessageBody(HttpRequestHeader requestHeader){
-        //todo implement probably needs different implementation for post and put (put needs to be an html page and end with null or </html>
-        //first get the reader
-        BufferedReader reader = this.getReader();
-        //initialize the line && the accumulator
-        String line;
-        List<String> messageBodyList = new ArrayList<>();
-        //then start to read until null
+//        //todo implement probably needs different implementation for post and put (put needs to be an html page and end with null or </html>
+//        //first get the reader
+//        BufferedReader reader = this.getReader();
+//        //initialize the line && the accumulator
+//        String line;
+//        List<String> messageBodyList = new ArrayList<>();
+//        //then start to read until null
+//        try {
+//            long toReceive = requestHeader.getContentLength();
+//            //read until all received or connection closed
+//            while(toReceive > 0&&((line = reader.readLine()) != null)){
+//                //add lines to the message accumulator
+//                messageBodyList.add(line);
+//                //get the size of the message
+//                toReceive-= (line.length() + 2); // the string + a CRLF
+//            }
+//        } catch (IOException e) {
+//            //something happened where we have no control over
+//            e.printStackTrace();
+//        }
+//        //after all the lines are read convert to an array of strings
+//        int messageLength = messageBodyList.size();
+//        return messageBodyList.toArray(new String[messageLength]);
+        //get the content length:
+        long bytesToRead = requestHeader.getContentLength();
+        //create a buffer:
+        //if larger than the cap, split in seperate buffers
+        byte buffer[] = bytesToRead >= BUFFER_CAP ? new byte[BUFFER_CAP] : new byte[Math.toIntExact(bytesToRead)];
+        //get the input stream
+        DataInputStream inputStream = this.getInputStream();
+        ByteArrayOutputStream stringStream = new ByteArrayOutputStream();
+        int readBytes;
         try {
-            long toReceive = requestHeader.getContentLength();
-            //read until all received or connection closed
-            while(toReceive > 0&&((line = reader.readLine()) != null)){
-                //add lines to the message accumulator
-                messageBodyList.add(line);
-                //get the size of the message
-                toReceive-= (line.length() + 2); // the string + a CRLF
+            while(bytesToRead != 0){
+
+                    readBytes = inputStream.read(buffer);
+                    //subtract the read bytes from the download bytes
+                    bytesToRead -= readBytes;
+                    //add the buffer to a buffer
+                    stringStream.write(buffer);
+                    //check if the buffer needs to be adjusted
+                    if(bytesToRead > buffer.length){
+                        //we need to stop exactly at the nb of bytes we need
+                        buffer = new byte[Math.toIntExact(bytesToRead)];
+                    }
+                    //goto start
+
             }
         } catch (IOException e) {
-            //something happened where we have no control over
             e.printStackTrace();
         }
-        //after all the lines are read convert to an array of strings
-        int messageLength = messageBodyList.size();
-        return messageBodyList.toArray(new String[messageLength]);
+        //convert the buffer to a string
+        String outputString = "";
+        try {
+            outputString = stringStream.toString("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        //split the string on new lines
+        String lines[] = outputString.split("\\R");
+        return lines;
+    }
+
+    /**
+     * Getter for the input stream used by the server for reading input
+     * @return the input stream used by the server to read input from the clients
+     */
+    public DataInputStream getInputStream() {
+        return inputStream;
     }
 
     /**
@@ -271,6 +331,7 @@ public class ServerConnection implements Runnable {
      * Getter for the reader that reads the input from the client
      * @return a buffered reader object ready to read input with
      */
+    @Deprecated
     private BufferedReader getReader() {
         return reader;
     }
@@ -304,9 +365,19 @@ public class ServerConnection implements Runnable {
      */
     private BufferedReader reader;
 
+    /**
+     * The input stream used for reading data from the client
+     */
+    private DataInputStream inputStream;
+
 
     /*
     Constants
      */
     private final static int TIMEOUT_SECONDS = 10;
+
+    /**
+     * the maximum buffer size for reading message bodies
+     */
+    private final static int BUFFER_CAP = 8192;
 }
