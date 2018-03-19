@@ -68,7 +68,6 @@ public class ImageRetriever {
             outStream.close();
             socket.close();
             String fileNameUri = imageUrl.getPath();
-            removeHeader(workingDir, fileNameUri, downloadedFile );
         }
     }
 
@@ -114,7 +113,6 @@ public class ImageRetriever {
             System.out.println("download finished");
             System.out.println();
 
-            //removeHeader(workingDir, imageURI, downloadFile);
 
         }
 
@@ -158,53 +156,30 @@ public class ImageRetriever {
         return downloadFile;
     }
 
-    private static void removeHeader(String workingDir, String imageURI, File downloadFile) throws IOException {
-        //create the cleaned files path
-        Path cleanFilePath = Paths.get(workingDir ,"RequestedPageCache","imageCache", "cleanedFiles" ,imageURI);
-
-        //Remove HTTP Header from file to make it readable
-        InputStream fileStream = com.google.common.io.Files.asByteSource(downloadFile).openStream();
-        //create the file based on the uri
-        File cleanedFile = new File(cleanFilePath.toUri());
-
-        //create the dirs to avoid issues with the filesystem
-        cleanedFile.getParentFile().mkdirs();
-        cleanedFile.createNewFile();
-
-        //create header removal output stream to the new file
-        OutputStream headerRemove = new FileOutputStream(cleanedFile);
-        //initiate the cleaner parameters
-        int count, offset;
-        byte[] cleanerBuffer = new byte[2048];
-        boolean endOfHeaderFound = false;
-
-//        while ((count = fileStream.read(cleanerBuffer)) != -1)
-//        {
-//            offset = 0;
-//            if(!endOfHeaderFound){
-//                //create string from the buffer
-//                String string = new String(cleanerBuffer, 0, count);
-//                //search for the header in the string
-//                int indexOfEOH = string.indexOf("\r\n\r\n");
-//                //if found
-//                if(indexOfEOH != -1) {
-//                    //the count of the bytes to be transferred is the amount read minus the header
-//                    //bytes minus the CRLF characters to indicate the end of the header
-//                    count = count-indexOfEOH-4;
-//                    //the offset for the end of header, is four characters long
-//                    //so we need to jump over them
-//                    offset = indexOfEOH+4;
-//                    endOfHeaderFound = true;
-//                } else {
-//                    count = 0;
-//                }
-//            }
-//            headerRemove.write(cleanerBuffer, offset, count);
-//            headerRemove.flush();
-//        }
-        fileStream.close();
-        headerRemove.close();
-    }
+//    private static void removeHeader(String workingDir, String imageURI, File downloadFile) throws IOException {
+//        //create the cleaned files path
+//        Path cleanFilePath = Paths.get(workingDir ,"RequestedPageCache","imageCache", "cleanedFiles" ,imageURI);
+//
+//        //Remove HTTP Header from file to make it readable
+//        InputStream fileStream = com.google.common.io.Files.asByteSource(downloadFile).openStream();
+//        //create the file based on the uri
+//        File cleanedFile = new File(cleanFilePath.toUri());
+//
+//        //create the dirs to avoid issues with the filesystem
+//        cleanedFile.getParentFile().mkdirs();
+//        cleanedFile.createNewFile();
+//
+//        //create header removal output stream to the new file
+//        OutputStream headerRemove = new FileOutputStream(cleanedFile);
+//        //initiate the cleaner parameters
+//        int count, offset;
+//        byte[] cleanerBuffer = new byte[2048];
+//        boolean endOfHeaderFound = false;
+//
+//
+//        fileStream.close();
+//        headerRemove.close();
+//    }
 
 
     //Checks whether the image URI is internal to the server we're connected to.

@@ -88,13 +88,12 @@ public class HttpGetRequest extends HttpRequest {
      * @param responseBody the string to analyze
      */
     private void replaceHtmlImageSources(String responseBody) {
-        //TODO: append /HTTPAssignment/imageCache/cleanedFiles to filePath
-        //TODO check if external URL, if so rename with the path
+
         Document doc = Jsoup.parse(responseBody);
         Elements imagesToReplace = doc.select("img");
         for(Element img: imagesToReplace){
             String source = img.attr("src");
-            String newSource = "imageCache/cleanedFiles/"+ getRenamedSource(source);
+            String newSource = "imageCache/"+ getRenamedSource(source);
             img.attr("src", newSource);
         }
 
