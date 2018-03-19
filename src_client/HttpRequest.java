@@ -89,6 +89,7 @@ public abstract class HttpRequest  {
         //send the byte array
         try {
             outputStream.write(requestBytes, 0, requestBytes.length);
+            outputStream.flush();
         } catch (IOException e) {
             //something went wrong
             e.printStackTrace();

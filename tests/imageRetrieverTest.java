@@ -67,7 +67,7 @@ public class imageRetrieverTest {
 
         socket.close();
 
-        ImageRetriever.retrieveImages(imagelist, currentHost);
+        //ImageRetriever.retrieveImages(imagelist, currentHost);
 
 
 

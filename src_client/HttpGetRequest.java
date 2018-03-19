@@ -32,7 +32,7 @@ public class HttpGetRequest extends HttpRequest {
         sendRequestHeader(requestMessage, outputStream);
 
         //read the input from the stream
-        return receiveResponse(inputStream);
+        return receiveResponse(inputStream, outputStream);
     }
 
     /**
@@ -40,7 +40,7 @@ public class HttpGetRequest extends HttpRequest {
      * @param inputStream the input stream used for receiving the input
      * @return a string containing the response from the server
      */
-    private String receiveResponse(DataInputStream inputStream){
+    private String receiveResponse(DataInputStream inputStream, DataOutputStream outputStream){
         //initialize the strings
 
         String responseBody = null;
@@ -59,7 +59,7 @@ public class HttpGetRequest extends HttpRequest {
         responseBody = HttpRequest.readResponseBodyBytes(inputStream, messageContentLength);//getResponseMessageBody(reader, messageContentLength);
 
         //Retrieve the embedded images from a site and save them to "imageCache"
-        getEmbeddedImages(responseBody);
+        getEmbeddedImages(responseBody, inputStream, outputStream);
 
         return  responseHeader.toString() + "\n\n" + responseBody;
     }
@@ -68,13 +68,13 @@ public class HttpGetRequest extends HttpRequest {
      * Retrieves all the embedded images from the response
      * @param responseBody the response from the server (the html page to download from)
      */
-    private void getEmbeddedImages(String responseBody) {
+    private void getEmbeddedImages(String responseBody, DataInputStream inputStream, DataOutputStream outputStream) {
         Elements images = ParseHTML.scanForEmbeddedImages(responseBody);
 
         ArrayList imageList = ParseHTML.getImageLinkList(images);
 
         try {
-            ImageRetriever.retrieveImages(imageList, getUrl().getHost());
+            ImageRetriever.retrieveImages(imageList, getUrl().getHost(),inputStream, outputStream);
 
         } catch (IOException e) {
             //Fault in imageRetriever
