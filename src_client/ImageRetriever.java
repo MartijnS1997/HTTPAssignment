@@ -55,8 +55,12 @@ public class ImageRetriever {
                     = new DataInputStream(socket.getInputStream());
             Path downloadPath = Paths.get(workingDir,"RequestedPageCache", "imageCache", imageUrl.getPath());
 
+            ClientResponseHeader responseHeader = new ClientResponseHeader();
+            responseHeader.readResponseHeader(new DataInputStream(inputStream));
+            long downloadSize = responseHeader.getContentLength();
+
             System.out.println("Start download");
-            File downloadedFile = downLoadImage(inputStream, downloadPath);
+            File downloadedFile = downLoadImage(inputStream, downloadPath, downloadSize);
             System.out.println("Download finished");
             System.out.println();
 
@@ -68,36 +72,6 @@ public class ImageRetriever {
         }
     }
 
-//            InputStream fileStream = com.google.common.io.Files.asByteSource(file).openStream();
-//            path = Paths.get(workingDir, "imageCache", "cleanedFiles",imageUrl.getPath());
-//
-//            File cleanedFile = new File(path.toUri());
-//            cleanedFile.getParentFile().mkdirs();
-//            cleanedFile.createNewFile();
-//            OutputStream headerRemove = new FileOutputStream(cleanedFile);
-//            int count, offset;
-//            byte[] cleanerBuffer = new byte[2048];
-//            boolean eohFound = false;
-//            while ((count = fileStream.read(cleanerBuffer)) != -1)
-//            {
-//                offset = 0;
-//                if(!eohFound){
-//                    String string = new String(cleanerBuffer, 0, count);
-//                    int indexOfEOH = string.indexOf("\r\n\r\n");
-//                    if(indexOfEOH != -1) {
-//                        count = count-indexOfEOH-4;
-//                        offset = indexOfEOH+4;
-//                        eohFound = true;
-//                    } else {
-//                        count = 0;
-//                    }
-//                }
-//                headerRemove.write(cleanerBuffer, offset, count);
-//                headerRemove.flush();
-//            }
-//            fileStream.close();
-//            headerRemove.close();
-
 
     private static void downloadInternalImages(String currentHost, String workingDir, List<String> internalImages) throws IOException {
         Path path;
@@ -105,16 +79,28 @@ public class ImageRetriever {
         PrintWriter outStream
                 = new PrintWriter(socket.getOutputStream());
         //create a new input stream
-        InputStream inputStream = socket.getInputStream();
+        DataInputStream inputStream = new DataInputStream(socket.getInputStream());
 
         for (String imageURI: internalImages){
             //send the get request
 
             System.out.println("Querying image: " + imageURI);
             outStream.println("GET /" + imageURI +" HTTP/1.1");
+            System.out.println("GET /" + imageURI +" HTTP/1.1");
             outStream.println("Host: " + currentHost);
+            System.out.println("Host: " + currentHost);
+            System.out.println("Connection: keep-alive");
             outStream.println();
             outStream.flush();
+
+            while((inputStream.available()==0)){
+                //do nothing
+            }
+
+            ClientResponseHeader responseHeader = new ClientResponseHeader();
+            responseHeader.readResponseHeader(new DataInputStream(inputStream));
+            long downloadSize = responseHeader.getContentLength();
+            System.out.println(responseHeader.toString());
 
             System.out.println("Request Sent");
             //create new data input stream
@@ -124,11 +110,11 @@ public class ImageRetriever {
             Path downloadPath = Paths.get(workingDir,"RequestedPageCache","imageCache", imageURI);
             //created file based on the uri
             System.out.println("downloading file");
-            File downloadFile = downLoadImage(dataInputStream, downloadPath);
+            File downloadFile = downLoadImage(dataInputStream, downloadPath, downloadSize);
             System.out.println("download finished");
             System.out.println();
 
-            removeHeader(workingDir, imageURI, downloadFile);
+            //removeHeader(workingDir, imageURI, downloadFile);
 
         }
 
@@ -137,21 +123,33 @@ public class ImageRetriever {
         socket.close();
     }
 
-    private static File downLoadImage(DataInputStream dataInputStream, Path downloadPath) throws IOException {
+    private static File downLoadImage(DataInputStream dataInputStream, Path downloadPath, long downloadSize) throws IOException {
+
         File downloadFile = new File(downloadPath.toUri());
         downloadFile.getParentFile().mkdirs();
         downloadFile.createNewFile();
+
         DataOutputStream fileDataOutputStream = new DataOutputStream(new FileOutputStream(downloadFile));
         int size;
         //the buffer size to write bytes to the file
-        byte[] buffer = new byte[8192];
+        byte[] buffer = new byte[Math.toIntExact(downloadSize)];
         //read the data from the connection
-        while ((size = dataInputStream.read(buffer)) > 0){
+        System.out.println("nb of bytes available @Stream: " + dataInputStream.available());
+        try {
+            Thread.sleep(20);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+//        while ((size = dataInputStream.read(buffer)) > 0){
+        size = dataInputStream.read(buffer);
+            System.out.println("Read bytes: " + size);
+
             fileDataOutputStream.write(buffer, 0, size);
             fileDataOutputStream.flush();
-        }
+//        }
         //the file is written
         fileDataOutputStream.close();
+
         return downloadFile;
     }
 
@@ -174,30 +172,31 @@ public class ImageRetriever {
         int count, offset;
         byte[] cleanerBuffer = new byte[2048];
         boolean endOfHeaderFound = false;
-        while ((count = fileStream.read(cleanerBuffer)) != -1)
-        {
-            offset = 0;
-            if(!endOfHeaderFound){
-                //create string from the buffer
-                String string = new String(cleanerBuffer, 0, count);
-                //search for the header in the string
-                int indexOfEOH = string.indexOf("\r\n\r\n");
-                //if found
-                if(indexOfEOH != -1) {
-                    //the count of the bytes to be transferred is the amount read minus the header
-                    //bytes minus the CRLF characters to indicate the end of the header
-                    count = count-indexOfEOH-4;
-                    //the offset for the end of header, is four characters long
-                    //so we need to jump over them
-                    offset = indexOfEOH+4;
-                    endOfHeaderFound = true;
-                } else {
-                    count = 0;
-                }
-            }
-            headerRemove.write(cleanerBuffer, offset, count);
-            headerRemove.flush();
-        }
+
+//        while ((count = fileStream.read(cleanerBuffer)) != -1)
+//        {
+//            offset = 0;
+//            if(!endOfHeaderFound){
+//                //create string from the buffer
+//                String string = new String(cleanerBuffer, 0, count);
+//                //search for the header in the string
+//                int indexOfEOH = string.indexOf("\r\n\r\n");
+//                //if found
+//                if(indexOfEOH != -1) {
+//                    //the count of the bytes to be transferred is the amount read minus the header
+//                    //bytes minus the CRLF characters to indicate the end of the header
+//                    count = count-indexOfEOH-4;
+//                    //the offset for the end of header, is four characters long
+//                    //so we need to jump over them
+//                    offset = indexOfEOH+4;
+//                    endOfHeaderFound = true;
+//                } else {
+//                    count = 0;
+//                }
+//            }
+//            headerRemove.write(cleanerBuffer, offset, count);
+//            headerRemove.flush();
+//        }
         fileStream.close();
         headerRemove.close();
     }

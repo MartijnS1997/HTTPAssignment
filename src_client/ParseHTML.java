@@ -27,7 +27,14 @@ public class ParseHTML {
             StringBuilder elemLineBuilder = new StringBuilder();
             elemLineBuilder.append(elem.toString());
             String elemString = elemLineBuilder.toString();
-            String splitElem = elemString.split("src=")[1];
+            System.out.println(elemString);
+            String splitElem;
+            if(elemString.contains("src=")){
+                splitElem = elemString.split("src=")[1];
+            }else{
+                splitElem = elemString.split("SRC=")[1];
+            }
+
             splitElem = splitElem.split("\"")[1];
             imageList.add(splitElem);
 
