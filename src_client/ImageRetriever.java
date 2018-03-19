@@ -131,22 +131,27 @@ public class ImageRetriever {
 
         DataOutputStream fileDataOutputStream = new DataOutputStream(new FileOutputStream(downloadFile));
         int size;
-        //the buffer size to write bytes to the file
-        byte[] buffer = new byte[Math.toIntExact(downloadSize)];
+        //the buffer roughly 1/10th of the size of the file
+        byte[] buffer = new byte[Math.toIntExact(downloadSize)/10];
         //read the data from the connection
         System.out.println("nb of bytes available @Stream: " + dataInputStream.available());
-        try {
-            Thread.sleep(20);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-//        while ((size = dataInputStream.read(buffer)) > 0){
-        size = dataInputStream.read(buffer);
+        //start reading the buffer, keep reading until the download size reached zero
+        long bytesToDownload = downloadSize;
+
+        while(bytesToDownload != 0){
+            size = dataInputStream.read(buffer);
             System.out.println("Read bytes: " + size);
+            bytesToDownload-=size;
 
             fileDataOutputStream.write(buffer, 0, size);
             fileDataOutputStream.flush();
-//        }
+
+            //check if the buffer is still larger than the file to download
+            if(bytesToDownload < buffer.length){
+                //if not adjust the buffer size
+                buffer = new byte[Math.toIntExact(bytesToDownload)];
+            }
+        }
         //the file is written
         fileDataOutputStream.close();
 

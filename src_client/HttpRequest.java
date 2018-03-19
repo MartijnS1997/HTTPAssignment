@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -141,19 +142,54 @@ public abstract class HttpRequest  {
             return "";
         }
         //todo split buffer to be sure that it fits
-        //create the buffer
-        byte buffer[] = new byte[Math.toIntExact(contentLength)];
+        //create the buffer roughly 1/10 the size of the page to download
+        //ignore the overflow, chances are slim that we'll download a file larger than 2GB
+        byte buffer[] = new byte[Math.toIntExact(contentLength)/10];
+        //create a buffer to store the string
+        ByteArrayOutputStream outStringStream = new ByteArrayOutputStream();
+
+        long bytesToDownload = contentLength;
 
         try {
-            //read for the buffer size
-            int readBytes = inputStream.read(buffer);
-            //generate the string containing the message body
-            return new String(buffer, 0, readBytes);
-
+            while(bytesToDownload != 0){
+                //read for the buffer size
+                int readBytes = inputStream.read(buffer);
+                //generate the string containing the message body
+                outStringStream.write(buffer,0, readBytes);
+                //update the bytes to download
+                bytesToDownload -= readBytes;
+                //check if the response fits the buffer
+                if(bytesToDownload < buffer.length){
+                    //if not, adjust the buffer type
+                    buffer = new byte[Math.toIntExact(bytesToDownload)];
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        try {
+            return outStringStream.toString(String.valueOf(StandardCharsets.UTF_8));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         return "";
+    }
+
+    protected byte[] convertLinesToByteArray(List<String> lines){
+        //first generate the standard format to send the string, each line ends with /crlf
+        StringBuilder builder = new StringBuilder();
+        for(String line: lines){
+            //append the string
+            builder.append(line);
+            //append the crlf
+            builder.append("\r\n");
+        }
+
+        //now convert the builder into a string
+        String lineString = builder.toString();
+
+        //convert the string to an array of bytes
+        return lineString.getBytes(StandardCharsets.US_ASCII);
     }
 
     /**

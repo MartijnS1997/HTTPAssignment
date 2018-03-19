@@ -113,6 +113,7 @@ public class ClientResponseHeader {
      * @return an integer representing the response code
      */
     private static int parseResponseLine(String responseLine){
+        System.out.println("ResponseLine: " + responseLine);
         String responseElems[] = responseLine.split(" ");
         //the first part may be discarded
         //the second part is of interest, contains the status code
