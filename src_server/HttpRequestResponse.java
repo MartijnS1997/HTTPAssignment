@@ -1,3 +1,4 @@
+import java.io.DataOutputStream;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,9 +25,9 @@ public abstract class HttpRequestResponse {
 
     /**
      * Sends the request response to the client that is connected to the server
-     * @param writer the writer used to send the response
+     * @param outputStream the output stream to write the response to
      */
-    public abstract void sendResponse(PrintWriter writer);
+    public abstract void sendResponse(DataOutputStream outputStream);
 
     /**
      * The current date (including time) in the http header format:

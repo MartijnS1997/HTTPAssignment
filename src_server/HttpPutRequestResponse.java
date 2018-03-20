@@ -15,11 +15,10 @@ public class HttpPutRequestResponse extends HttpRequestResponse {
     }
 
     @Override
-    public void sendResponse(PrintWriter writer) {
+    public void sendResponse(DataOutputStream outputStream) {
         writeFile();
         ResponseHeader header = new ResponseHeader(HttpStatusCode.OK);
-        header.writeResponseHeader(writer);
-        writer.flush();
+        header.writeResponseHeader(outputStream);
     }
 
     /**

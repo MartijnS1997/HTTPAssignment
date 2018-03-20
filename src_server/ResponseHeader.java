@@ -1,4 +1,8 @@
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -51,17 +55,44 @@ public class ResponseHeader {
     /**
      * Writes the header to the specified printer
      * also adds the clear line to indicate the end of the header
-     * @param writer the printer to write with (writes to the client)
+     * @param outputStream the output stream used to respond to the client
+     * note: flushes the stream so other methods don't have to worry about it
      */
-    public void writeResponseHeader(PrintWriter writer){
+    public void writeResponseHeader(DataOutputStream outputStream){
         List<String> headerLines = this.getHeaderLines();
+        //add another blank line so it will be replaced by a \r\n
+        headerLines.add("");
+        byte[] headerBytes = convertLinesToBytes(headerLines);
         //System.out.println("header:\n" + headerLines);
-        for(String headerLine: headerLines){
-            writer.println(headerLine);
+        try {
+            outputStream.write(headerBytes);
+            outputStream.flush();
+        } catch (IOException e) {
+            throw new ServerException(HttpStatusCode.SERVER_ERROR);
         }
         //print the final newline to indicate the start of the response
-        writer.println();
-        writer.flush();
+
+    }
+
+    /**
+     * converts the requested lines into an byte array
+     * every line will be ended with a \r\n for good measure
+     * @param lines the lines to convert
+     * @return an array of bytes containing the original message but encoded in US_ASCII
+     */
+    private static byte[] convertLinesToBytes(List<String> lines){
+        //first we need to build a complete string containing all the lines
+        //a new line is \r\n
+        StringBuilder builder = new StringBuilder();
+        for(String line: lines){
+            //append the line to the builder
+            builder.append(line);
+            //append \r\n
+            builder.append("\r\n");
+        }
+        //build the string
+        String lineString = builder.toString();
+        return lineString.getBytes(StandardCharsets.US_ASCII);
     }
 
 

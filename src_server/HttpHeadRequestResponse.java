@@ -1,3 +1,4 @@
+import java.io.DataOutputStream;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 
@@ -17,7 +18,7 @@ public class HttpHeadRequestResponse extends HttpTransferRequestResponse{
     }
 
     @Override
-    public void sendResponse(PrintWriter writer) {
+    public void sendResponse(DataOutputStream outputStream) {
         //first try to create the header the normal way
         try{
             //get the file from the server
@@ -31,10 +32,10 @@ public class HttpHeadRequestResponse extends HttpTransferRequestResponse{
             //set the last modified date
             header.setModifiedSince(fileSystem.getLastModifiedDate(fileLocOnServer));
             //send the header
-            header.writeResponseHeader(writer);
+            header.writeResponseHeader(outputStream);
 
         }catch(ServerFileSystemException e){
-            sendError404Message( writer);
+            sendError404Message( outputStream);
         }
     }
 }

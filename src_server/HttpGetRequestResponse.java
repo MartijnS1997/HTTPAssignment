@@ -19,14 +19,14 @@ public class HttpGetRequestResponse extends HttpTransferRequestResponse {
     }
 
     @Override
-    public void sendResponse(PrintWriter writer) {
+    public void sendResponse(DataOutputStream outputStream) {
 //        System.out.println("Start sending get response");
         //first check if the message contains the if modified since
         if(isModifiedSince()){
 //            System.out.println("send modified since response");
-            sendModifiedResponse(writer);
+            sendModifiedResponse(outputStream);
         }else{
-            sendNotModifiedResponse(writer);
+            sendNotModifiedResponse(outputStream);
         }
 
 
@@ -34,9 +34,9 @@ public class HttpGetRequestResponse extends HttpTransferRequestResponse {
 
     /**
      * Send a message to the client that the file hasn't been modified since the requested date
-     * @param writer the writer used to send the message
+     * @param outputStream the output stream to send the not modified response to
      */
-    private void sendNotModifiedResponse(PrintWriter writer){
+    private void sendNotModifiedResponse(DataOutputStream outputStream){
 
         //create header
         ResponseHeader header = new ResponseHeader(HttpStatusCode.NOT_MODIFIED);
@@ -48,17 +48,14 @@ public class HttpGetRequestResponse extends HttpTransferRequestResponse {
         header.setModifiedSince(fileSystem.getLastModifiedDate(fileLocOnServer));
 
         //write the header to the client
-        header.writeResponseHeader(writer);
-
-
-        writer.flush();
+        header.writeResponseHeader(outputStream);
     }
 
     /**
      * Sends a message to the client with the requested file attached
-     * @param writer the writer used to send the message
+     * @param outputStream stream used to write the message to
      */
-    private void sendModifiedResponse(PrintWriter writer){
+    private void sendModifiedResponse(DataOutputStream outputStream){
         try {
             ServerFileSystem fileSystem = this.getFileSystem();
             Path fileLocOnServer = this.getServerPath();
@@ -72,17 +69,15 @@ public class HttpGetRequestResponse extends HttpTransferRequestResponse {
 
             //now send the response
             //write the header (takes care of the blank line)
-            header.writeResponseHeader(writer);
+            header.writeResponseHeader(outputStream);
 
             //send the file to the client
-            messageBodyFile.writeFile(writer);
-            //flush the line
-            writer.flush();
+            messageBodyFile.writeFileToOutStream(outputStream);
 
             //System.out.println("messageWritten");
 
         } catch (ServerFileSystemException | ServerException e) {
-            sendError404Message(writer);
+            sendError404Message(outputStream);
 
         }
     }

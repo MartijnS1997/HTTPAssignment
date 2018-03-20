@@ -1,7 +1,4 @@
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -21,18 +18,18 @@ public class HttpPostRequestResponse extends HttpTransferRequestResponse {
     }
 
     @Override
-    public void sendResponse(PrintWriter writer) {
+    public void sendResponse(DataOutputStream outputStream) {
 
         try {
             //retrieve the specified file
             ServerFileSystem fileSystem = this.getFileSystem();
             Path locationOnServer = this.getServerPath();
             //read file
-            appendFile(writer, fileSystem, locationOnServer);
+            appendFile(outputStream, fileSystem, locationOnServer);
 
         //the file doesn't exist on the file system
         } catch (ServerFileSystemException e) {
-            this.sendError404Message(writer);
+            this.sendError404Message(outputStream);
         }
 
 
@@ -40,14 +37,14 @@ public class HttpPostRequestResponse extends HttpTransferRequestResponse {
 
     /**
      * Appends the contents specified in the request message to the specified file on the server
-     * @param writer the writer used to write the contents back
+     * @param outputStream the output stream to write the response to
      * @param fileSystem the file system used to retrieve the file
      * @param locationOnServer the location of the file on thr server
      * @throws ServerFileSystemException
      */
-    private void appendFile(PrintWriter writer, ServerFileSystem fileSystem, Path locationOnServer) throws ServerFileSystemException {
+    private void appendFile(DataOutputStream outputStream, ServerFileSystem fileSystem, Path locationOnServer) throws ServerFileSystemException {
         ReadOnlyServerFile file = new ReadOnlyServerFile(fileSystem, locationOnServer);
-        List<String> fileLines = new ArrayList<>(file.getFileContents());
+        List<String> fileLines = new ArrayList<>(file.getFileContentLines());
         //concatenate the message
         List<String> messageBody = this.getMessageBody();
 
@@ -57,7 +54,7 @@ public class HttpPostRequestResponse extends HttpTransferRequestResponse {
         fileSystem.writeTextBasedFile(locationOnServer, fileLines.toArray(new String[fileLines.size()]));
         //write the response to the server
         ResponseHeader header = new ResponseHeader(HttpStatusCode.OK);
-        header.writeResponseHeader(writer);
+        header.writeResponseHeader(outputStream);
 
         Path outputFolder = this.getOutPutPath();
         Path outputFilePath = Paths.get(outputFolder.toString(), locationOnServer.getFileName().toString());

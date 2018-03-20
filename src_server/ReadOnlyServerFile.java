@@ -1,4 +1,7 @@
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -26,31 +29,72 @@ public class ReadOnlyServerFile {
         ServerFileSystem fileSystem = this.getFileSystem();
 
 
-        long fileSize = fileSystem.getFileSize(path);
-        this.fileSize = fileSize;
+//        long fileSize = fileSystem.getFileSize(path);
+//        this.fileSize = fileSize;
 
         //now read the file
         String file[] = fileSystem.readTextBasedFileLines(path);
         List<String> fileLines = Arrays.asList(file);
+        byte[] fileLineBytes = convertLinesToBytes(fileLines);
 
 
-
-        this.fileContents = fileLines;
+        this.fileContents = fileLineBytes;
+        //the file size is equal to the nb of bytes in the file content
+        this.fileSize = fileLineBytes.length;
     }
 
     /**
      * Writes the contents of the file to the provided print writer
-     * @param writer the writer used to write the file with to its destination
+     * @param outputStream used to write the file contents to the client
+     * note: flushes the data stream so other methods don't have to worry about it
      */
-    public void writeFile(PrintWriter writer){
-
-        List<String> fileLines = this.getFileContents();
-        for(String line: fileLines){
-            //System.out.println("line: " + line);
-            writer.println(line);
+    public void writeFileToOutStream(DataOutputStream outputStream){
+        byte[] contents = this.getFileContents();
+        try {
+            outputStream.write(contents);
+            outputStream.flush();
+        } catch (IOException e) {
+            throw new ServerException(HttpStatusCode.SERVER_ERROR);
         }
+
     }
 
+    /**
+     * converts the requested lines into an byte array
+     * every line will be ended with a \r\n for good measure
+     * @param lines the lines to convert
+     * @return an array of bytes containing the original message but encoded in US_ASCII
+     */
+    private static byte[] convertLinesToBytes(List<String> lines){
+        //first we need to build a complete string containing all the lines
+        //a new line is \r\n
+        StringBuilder builder = new StringBuilder();
+        for(String line: lines){
+            //append the line to the builder
+            builder.append(line);
+            //append \r\n
+            builder.append("\r\n");
+        }
+        //build the string
+        String lineString = builder.toString();
+        return lineString.getBytes(StandardCharsets.US_ASCII);
+    }
+
+    /**
+     * Getter for the file content represented in lines of strings
+     * @return an list made of strings where each entry is one line in the content
+     * warning: the resulting list implementation does not support appending new content!
+     */
+    public List<String> getFileContentLines(){
+        //first get the bytes of the content
+        byte[] fileContent = this.getFileContents();
+        //then convert the bytes to a string
+        String fileString = new String(fileContent,0, fileContent.length);
+        //then split the string on any newline
+        String[] lines = fileString.split("\\R");
+        //then to list
+        return Arrays.asList(lines);
+    }
 
     /**
      * Getter for the size of the file, it is saved once after that it doesn't change for the lifetime of the object
@@ -67,7 +111,7 @@ public class ReadOnlyServerFile {
      * a string for each line of text
      * @return a list of strings containing the contents of the file
      */
-    List<String> getFileContents() {
+    byte[] getFileContents() {
         return fileContents;
     }
 
@@ -92,7 +136,7 @@ public class ReadOnlyServerFile {
     /**
      * The contents of the file that are read once but never written
      */
-    private List<String> fileContents;
+    private byte[] fileContents;
 
     /**
      * The path containing the location of the file on the server

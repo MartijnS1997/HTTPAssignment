@@ -36,7 +36,7 @@ public class ServerConnection implements Runnable {
         while(true) {
             try {
                 HttpRequestResponse response = readRequest();
-                response.sendResponse(this.getPrintWriter());
+                response.sendResponse(this.getOutputStream());
             //catch any exceptions thrown by the server that could not be handled in the requests
             } catch (ServerException e){
                 writeErrorMessage(e.getStatusCode());
@@ -63,8 +63,8 @@ public class ServerConnection implements Runnable {
             InputStream inputStream = socket.getInputStream();
             this.inputStream = new DataInputStream(inputStream);
 
-            OutputStream outputStream = socket.getOutputStream();
-            this.printWriter = new PrintWriter(outputStream);
+            this.outputStream = new DataOutputStream(socket.getOutputStream());
+//            this.printWriter = new PrintWriter(outputStream);
         }catch(IOException e){
             //something went wrong, dunno what
             e.printStackTrace();
@@ -72,11 +72,13 @@ public class ServerConnection implements Runnable {
     }
 
     private void terminateConnection(){
-        PrintWriter writer = this.getPrintWriter();
+//        PrintWriter writer = this.getPrintWriter();
+        DataOutputStream outputStream = this.getOutputStream();
         DataInputStream inputStream = this.getInputStream();
         Socket socket = this.getConnectionSocket();
         try {
-            writer.close();
+            //writer.close();
+            outputStream.close();
             inputStream.close();
             socket.close();
         }catch(IOException e){
@@ -129,9 +131,10 @@ public class ServerConnection implements Runnable {
      * @param statusCode th status code that needs to be written
      */
     private void writeErrorMessage(HttpStatusCode statusCode){
-        PrintWriter writer = this.getPrintWriter();
+        //PrintWriter writer = this.getPrintWriter();
+        DataOutputStream outputStream = this.getOutputStream();
         ResponseHeader header = new ResponseHeader(statusCode);
-        header.writeResponseHeader(writer);
+        header.writeResponseHeader(outputStream);
     }
 
     /**
@@ -140,38 +143,39 @@ public class ServerConnection implements Runnable {
     @Deprecated
     private String readRequestLine(){
 
-        BufferedReader reader = this.getReader();
-        //we only need to read one line and parse it
-        String requestHeader = null;
-
-        try {
-            //get the start time of the listening process
-            long startTimeMillis = System.currentTimeMillis();
-            //read the input until not null
-            boolean inputStarted = false;
-
-            while(!inputStarted){
-                //get the time passed
-
-                requestHeader = reader.readLine();
-                if(requestHeader == null || reader.equals("")){
-                    //check if the time has exceeded the maximum allowed time
-                    long timePassed = System.currentTimeMillis() - startTimeMillis;
-                    //divide by 1000 to get seconds
-                    if(timePassed/6000f > TIMEOUT_SECONDS){
-                        throw new ServerException(HttpStatusCode.TIMEOUT);
-                    }
-                }else{
-                    inputStarted = true;
-                }
-            }
-//            requestHeader = reader.readLine();
-        } catch (IOException e) {
-            //got an issue doing IO no idea what went wrong
-            e.printStackTrace();
-        }
-
-        return requestHeader;
+//        BufferedReader reader = this.getReader();
+//        //we only need to read one line and parse it
+//        String requestHeader = null;
+//
+//        try {
+//            //get the start time of the listening process
+//            long startTimeMillis = System.currentTimeMillis();
+//            //read the input until not null
+//            boolean inputStarted = false;
+//
+//            while(!inputStarted){
+//                //get the time passed
+//
+//                requestHeader = reader.readLine();
+//                if(requestHeader == null || reader.equals("")){
+//                    //check if the time has exceeded the maximum allowed time
+//                    long timePassed = System.currentTimeMillis() - startTimeMillis;
+//                    //divide by 1000 to get seconds
+//                    if(timePassed/6000f > TIMEOUT_SECONDS){
+//                        throw new ServerException(HttpStatusCode.TIMEOUT);
+//                    }
+//                }else{
+//                    inputStarted = true;
+//                }
+//            }
+////            requestHeader = reader.readLine();
+//        } catch (IOException e) {
+//            //got an issue doing IO no idea what went wrong
+//            e.printStackTrace();
+//        }
+//
+//        return requestHeader;
+        return null;
     }
 
     /**
@@ -296,22 +300,32 @@ public class ServerConnection implements Runnable {
         return connectionSocket;
     }
 
-    /**
-     * Getter for the print stream used to output the data to the client
-     * @return the output print stream
-     */
-    private PrintWriter getPrintWriter() {
-        return printWriter;
-    }
+//    /**
+//     * Getter for the print stream used to output the data to the client
+//     * @return the output print stream
+//     */
+//    @Deprecated
+//    private PrintWriter getPrintWriter() {
+//        return printWriter;
+//    }
+//
+//    /**
+//     * Getter for the reader that reads the input from the client
+//     * @return a buffered reader object ready to read input with
+//     */
+//    @Deprecated
+//    private BufferedReader getReader() {
+//        return reader;
+//    }
 
     /**
-     * Getter for the reader that reads the input from the client
-     * @return a buffered reader object ready to read input with
+     * Getter for the data output stream of the connection, used for communication with the clients
+     * @return the data output stream used by the server for communication with the clients
      */
-    @Deprecated
-    private BufferedReader getReader() {
-        return reader;
+    private DataOutputStream getOutputStream() {
+        return outputStream;
     }
+
 
     /**
      * Getter for the server the connection works with
@@ -330,18 +344,15 @@ public class ServerConnection implements Runnable {
      * The socket responsible for this connection
      */
     private Socket connectionSocket;
+//    /**
+//     * Writer used to write messages to the client
+//     */
+//    private PrintWriter writer;
 
     /**
-     * The print output stream of the server, used for printing text to the clients
-     * (in this assignment we only need to send text)
+     * The output stream used to write the request responses to the clients
      */
-    private PrintWriter printWriter;
-
-    /**
-     * Buffered reader used for reading the request made by the clients
-     */
-    private BufferedReader reader;
-
+    private DataOutputStream outputStream;
     /**
      * The input stream used for reading data from the client
      */

@@ -1,3 +1,4 @@
+import java.io.DataOutputStream;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,9 +46,9 @@ public abstract class HttpTransferRequestResponse extends HttpRequestResponse {
 
     /**
      * Method for sending the 404 error message to the client
-     * @param writer the writer used for writing the message
+     * @param outputStream the output stream to write the error message to
      */
-    protected void sendError404Message(PrintWriter writer) {
+    protected void sendError404Message(DataOutputStream outputStream) {
 
         //create the standard header, ready to be expanded
         //List<String> error404Header = super.createResponseHeader(HttpStatusCode.NOT_FOUND);
@@ -71,11 +72,10 @@ public abstract class HttpTransferRequestResponse extends HttpRequestResponse {
         header.setConnection(CONNECTION_CLOSE);
 
         //write the header, it also takes care of the empty line
-        header.writeResponseHeader(writer);
+        header.writeResponseHeader(outputStream);
         //send the page
-        error404File.writeFile(writer);
+        error404File.writeFileToOutStream(outputStream);
         //flush the line to be sure
-        writer.flush();
     }
 
     private final static Path ERROR_404_PAGE_PATH = Paths.get("/messagePages/Error404.html");
