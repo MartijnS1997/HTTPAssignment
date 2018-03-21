@@ -57,7 +57,10 @@ public class ImageRetriever {
             if(!currentUrl.getHost().equals(prevUrl.getHost())){
                 //System.out.println("Switching hosts");
                 //if not change the prev url to check next time
-                prevUrl = new URL(prevUrl.toString());
+                prevUrl = new URL(currentUrl.toString());
+                inputStream.close();
+                outStream.close();
+                socket.close();
                 socket = new Socket(externalHost, TCP_PORT);
                 outStream = new PrintWriter(socket.getOutputStream());
                 inputStream = new DataInputStream(socket.getInputStream());
@@ -90,9 +93,7 @@ public class ImageRetriever {
             //System.out.println("Download finished");
             //System.out.println();
 
-            inputStream.close();
-            outStream.close();
-            socket.close();
+
             String fileNameUri = currentUrl.getPath();
         }
     }
