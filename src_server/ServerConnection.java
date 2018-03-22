@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
@@ -184,26 +185,48 @@ public class ServerConnection implements Runnable {
      */
     private String[] readRequestHeader() throws IOException {
         DataInputStream inputStream = this.getInputStream();
-        //the character used to buffer
-        int charRead;
-        //the builder where the header is built
-        StringBuilder sb = new StringBuilder();
-        while (true) {
-            sb.append((char) (charRead = inputStream.read()));
-            if ((char) charRead == '\r') {            // if we've got a '\r'
-                sb.append((char) inputStream.read()); // then write '\n'
-                charRead = inputStream.read();        // read the next char;
-                if (charRead == '\r') {                  // if it's another '\r'
-                    sb.append((char) inputStream.read());// write the '\n'
-                    break;
-                } else {
-                    sb.append((char) charRead);
+
+        //create a callable to read the input from the stream
+        Callable<String> requestReader = new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                int charRead;
+                //the builder where the header is built
+                StringBuilder sb = new StringBuilder();
+                while (true) {
+                    sb.append((char) (charRead = inputStream.read()));
+                    if ((char) charRead == '\r') {            // if we've got a '\r'
+                        sb.append((char) inputStream.read()); // then write '\n'
+                        charRead = inputStream.read();        // read the next char;
+                        if (charRead == '\r') {                  // if it's another '\r'
+                            sb.append((char) inputStream.read());// write the '\n'
+                            break;
+                        } else {
+                            sb.append((char) charRead);
+                        }
+                    }
                 }
+
+                return sb.toString();
             }
+        };
+        //the character used to buffer
+
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<String> headerStringFuture = executor.submit(requestReader);
+        String headerString;
+
+        //execute the callable, if we listen for too long, close the thread
+        try {
+            headerString = headerStringFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (InterruptedException | TimeoutException e) {
+            throw new ServerException(HttpStatusCode.TIMEOUT);
+        } catch (ExecutionException e) {
+            throw new ServerException(HttpStatusCode.SERVER_ERROR);
         }
 
         //return the received lines
-        String[] headersArray = sb.toString().split("\r\n");
+        String[] headersArray = headerString.split("\r\n");
         //clean the empty lines
         return headersArray;
 //        return Arrays.stream(headersArray).filter(s -> !s.matches("\\R")).collect(Collectors.toList()).toArray(new String[0]);
@@ -362,7 +385,7 @@ public class ServerConnection implements Runnable {
     /*
     Constants
      */
-    private final static int TIMEOUT_SECONDS = 10;
+    private final static int TIMEOUT_SECONDS = 120;
 
     /**
      * the maximum buffer size for reading message bodies

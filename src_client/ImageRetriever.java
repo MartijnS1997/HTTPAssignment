@@ -96,6 +96,10 @@ public class ImageRetriever {
 
             String fileNameUri = currentUrl.getPath();
         }
+
+        inputStream.close();
+        outStream.close();
+        socket.close();
     }
 
 
@@ -128,7 +132,7 @@ public class ImageRetriever {
             ClientResponseHeader responseHeader = new ClientResponseHeader();
             responseHeader.readResponseHeader(new DataInputStream(parentInputStream));
             long downloadSize = responseHeader.getContentLength();
-            System.out.println(responseHeader.toString());
+            //System.out.println(responseHeader.toString());
 
             //System.out.println("Request Sent");
             //create new data input stream

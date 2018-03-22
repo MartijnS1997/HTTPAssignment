@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by Martijn on 10/03/2018.
@@ -214,7 +215,8 @@ public class HttpRequestParser {
 
         try {
             //the format of the last modified date
-            SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+            SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT, Locale.US);
+//            System.out.println(modifiedSinceDate);
             Date parsedDate = dateFormat.parse(modifiedSinceDateString);
             timestamp = new java.sql.Timestamp(parsedDate.getTime());
         } catch (ParseException e) {

@@ -28,6 +28,7 @@ public class Client {
             throw new ClientException(ALREADY_CONNECTED);
         }
 
+        this.setActivePort(TCPPort);
         //after connection set the current url
         this.setCurrentUrl(url);
 
@@ -55,7 +56,7 @@ public class Client {
      * Checks if the client is already connected
      * @return returns true if the client is already connected
      */
-    private boolean isAlreadyConnected(){
+    public boolean isAlreadyConnected(){
         Socket connectionSocket = this.getConnectionSocket();
         if(connectionSocket == null){
             return false;
@@ -211,6 +212,22 @@ public class Client {
     }
 
     /**
+     * The current port used for the tcp connection with the server
+     * @return an integer containing the currently operated port
+     */
+    public int getActivePort() {
+        return activePort;
+    }
+
+    /**
+     * Setter for the port currently used by the client
+     * @param activePort the active port
+     */
+    private void setActivePort(int activePort) {
+        this.activePort = activePort;
+    }
+
+    /**
      * The output stream to write to the servers
      */
     private DataOutputStream outputStream;
@@ -229,6 +246,11 @@ public class Client {
      * Socket to connect the client to the server
      */
     private Socket connectionSocket;
+
+    /**
+     * The current port operated by the client for our connection with the server
+     */
+    private int activePort;
 
     /**
      * the url of the current connection

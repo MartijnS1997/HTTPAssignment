@@ -1,4 +1,7 @@
+import com.sun.org.apache.regexp.internal.RE;
+
 import java.io.*;
+import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -166,16 +169,47 @@ public class ClientCommandLine {
         //then file it to the client
         Client client = this.getClient();
         //get the response from the server
-        String Response = null;
+        String Response = "";
         try {
             Response = client.issueRequest(httpRequest);
+            //print the response
+            PrintStream printStream = this.getPrintStream();
+            printStream.println(Response);
+        }catch(ClientException e){
+            clientExceptionHandler(clientCommand, command, e);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        //print the response
-        PrintStream printStream = this.getPrintStream();
-        printStream.println(Response);
     }
+
+    /**
+     * Handles the client exception thrown by the client during the issuing of a request
+     * @param clientCommand the string containing the current command
+     * @param command the parsed command
+     * @param exception the exception to be checked
+     */
+    private void clientExceptionHandler(String clientCommand, ClientCommand command, ClientException exception) {
+        if(exception.getErrorType() != null && exception.getErrorType().equals(ClientErrorTypes.CONNECTION_CLOSED)){
+            reconnect(command);
+            //restart the execution of the command
+            executeCommand(clientCommand);
+        }else{
+            //otherwise we could not handle it here
+            throw exception;
+        }
+    }
+
+    /**
+     * Reconnects the client with the given server if the connection closed in between commands
+     * @param command the command issued by the user
+     */
+    private void reconnect(ClientCommand command){
+        Client client = this.getClient();
+        client.closeConnection();
+        client.initConnection(command);
+
+    }
+
     //TODO check also for same tcp
 
     /**
@@ -187,9 +221,8 @@ public class ClientCommandLine {
         URL commandURL = command.getUrl();
         //get the connected client
         Client client = this.getClient();
-        //check if we are still operating on the same host
-
-        if(client.hasSameHost(commandURL)){
+        //check if we are still operating on the same host & the same port
+        if(client.hasSameHost(commandURL)&&client.getActivePort() == command.getPort()){
             //we are already connected, no issue
             System.out.println("Same host");
             return;
@@ -207,6 +240,7 @@ public class ClientCommandLine {
         client.initConnection(command);
         //now we're connected
     }
+
 
     /**
      * Method that retrieves the message body from the command line

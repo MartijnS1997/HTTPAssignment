@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -144,6 +145,18 @@ public class parserTests {
         String[] cleaned = Arrays.stream(lines).filter(s -> !s.matches("\\R")&&!s.isEmpty()).collect(Collectors.toList()).toArray(new String[0]);
         System.out.println(Arrays.toString(cleaned));
 
+    }
+    @Test
+    public void parseDate() throws ParseException {
+        Date date = null;
+        String dateValue  = "Tue, 27 Jan 2015 07:33:54 GMT";
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+
+        date = dateFormat.parse(dateValue);
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+        System.out.println("date = " + dateFormat.format(date));
     }
 
 }

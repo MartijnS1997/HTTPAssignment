@@ -91,8 +91,9 @@ public abstract class HttpRequest  {
             outputStream.write(requestBytes, 0, requestBytes.length);
             outputStream.flush();
         } catch (IOException e) {
-            //something went wrong
-            e.printStackTrace();
+            //maybe the connection closed during writing
+            //try to re-establish connection
+            throw new ClientException(ClientErrorTypes.CONNECTION_CLOSED);
         }
 
 //        for(String requestLine: requestHeader){

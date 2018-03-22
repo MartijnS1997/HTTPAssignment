@@ -135,5 +135,5 @@ public abstract class HttpRequestResponse {
     protected final static String CONTENT_LENGTH_STRING = "Content-Lenght: ";
     protected final static String CONTENT_TEXT_HTML_TYPE = "text/html";
     protected final static String CONTENT_CHARSET_ISO = "; charset=iso-8859-1";
-    protected final static String OUTPUT_DIR = "/requestOutputs";
+    protected final static String OUTPUT_DIR = "/resources";
 }

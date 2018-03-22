@@ -68,7 +68,7 @@ public class ClientResponseHeader {
             parseHeader(headerLines);
             this.setHeaderLines(headerLines);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ClientException(ClientErrorTypes.CONNECTION_CLOSED);
         }
     }
     /**
@@ -95,6 +95,10 @@ public class ClientResponseHeader {
                     sb.append((char) charRead);
                 }
             }
+
+            if((char) charRead == '\0'){
+                throw new ClientException(ClientErrorTypes.CONNECTION_CLOSED);
+            }
         }
 
         String[] headersArray = sb.toString().split("\r\n");
@@ -113,7 +117,7 @@ public class ClientResponseHeader {
      * @return an integer representing the response code
      */
     private static int parseResponseLine(String responseLine){
-        System.out.println("ResponseLine: " + responseLine);
+        //System.out.println("ResponseLine: " + responseLine);
         String responseElems[] = responseLine.split(" ");
         //the first part may be discarded
         //the second part is of interest, contains the status code

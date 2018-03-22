@@ -19,7 +19,7 @@ public class TestClient {
     //another site to try: http://www.cafeaulait.org/course/week12/22.html
     public static void main(String args[]) throws IOException {
         //TestClient testClient = new TestClient();
-        InetAddress address = InetAddress.getByName((new URL("http://www.jmarshall.com")).getHost());
+        InetAddress address = InetAddress.getByName((new URL("http://localhost/homepage.html")).getHost());
         Socket socket = new Socket(address, 80);
         // Create the input and output streams for the network socket.
         DataInputStream inputStream = new DataInputStream(socket.getInputStream());
@@ -27,9 +27,10 @@ public class TestClient {
         PrintWriter out
                 = new PrintWriter(socket.getOutputStream(), true);
         // Send request to the HTTP server.
-        out.println("GET / HTTP/1.1\r\nHost: www.jmarshall.com");
+        out.println("GET /homepage.html HTTP/1.1\r\nHost: localhost");
         //out.println("Host: www.cafeaulait.org");
         out.println("Connection: Keep-Alive");
+        out.println("If-Modified-Since: " + "Thu, 22 Mar 2018 14:48:00 GMT");
         out.println();   // blank line separating header & body
         out.flush();
         // Read the response and display on console.

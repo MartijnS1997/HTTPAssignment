@@ -8,6 +8,10 @@ public class ClientException extends IllegalArgumentException {
         this.errorMessage = message;
     }
 
+    public ClientException(ClientErrorTypes errorType){
+        this.errorType = errorType;
+    }
+
     /**
      * Getter for the error message used for the command client
      * @return the error message to be read by the command line client
@@ -17,7 +21,25 @@ public class ClientException extends IllegalArgumentException {
     }
 
     /**
+     * Getter for the error type experienced by the client
+     * @return
+     */
+    public ClientErrorTypes getErrorType() {
+        return errorType;
+    }
+
+    /**
      * The error message used for communication with the command line client
      */
     private String errorMessage;
+
+    /**
+     * The client error
+     */
+    private ClientErrorTypes errorType = null;
+
+}
+
+enum ClientErrorTypes {
+    CONNECTION_CLOSED
 }
